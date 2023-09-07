@@ -73,8 +73,7 @@ router.get("/getAllDuties/:id", async (req, res)=>{
 
 router.post('/track',[
     body('worker'),
-    body('latitude','latitude cannot be null').isLength({min:3}),
-    body('longitude','longitude cannot be null').isLength({min:3}),
+    
 
 ],async(req, res)=>{
     let error = validationResult(req);
