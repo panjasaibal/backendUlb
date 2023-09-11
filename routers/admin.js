@@ -78,7 +78,6 @@ router.post('/addworker',[
     body('name','Please enter a valid name').isLength({min:3}),
     body('phone','Please enter a valid phone number').isLength({min:10,max:10})
    
-
 ], async(req, res)=>{
     const errors = validationResult(req);
 
@@ -103,11 +102,11 @@ router.post('/addworker',[
        res.status(500).send('Internal server error')
 
     }
-
     
 })
 
 //get worker "/getworker/:phonenumber"
+
 router.get('/getworker/:phone', async(req, res)=>{
     const phoneNumber = req.params.phone;
     if(phoneNumber.length!==10){
@@ -126,7 +125,6 @@ router.get('/getworker/:phone', async(req, res)=>{
 
     }
     
-
 })
 
 //add duty "/addduty"
@@ -161,7 +159,6 @@ router.post('/addduty',[
 
     }
 
-    
 })
 
 //get All duties of the specific worker "/getAllDuties"
@@ -189,11 +186,6 @@ router.get("/trackWorker/:id", async(req, res)=>{
         res.status(500).send("Internal Server error");
     }
 });
-
-
-
-
-
 
 module.exports = router;
 

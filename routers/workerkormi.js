@@ -74,22 +74,19 @@ router.get("/getAllDuties/:id", async (req, res)=>{
 router.post('/track',[
     body('worker'),
     
-
 ],async(req, res)=>{
-    let error = validationResult(req);
-    if(!error.isEmpty()){
-        return res.status(400).json({errors: error.array()});
-    }
+    
     try{
-        const{worker, latitude, longitude} = req.body;
+        const{worker} = req.body;
         let currentWorker = await Worker.findOne({_id:worker});
 
         if(!currentWorker){
             return res.status(400).json({error:'worker does not exist'});
         }
-        const tracker = new UserTrackDuty({worker,latitude,longitude})
-        let savetracker = tracker.save();
-        res.send({savetracker})
+
+        const tracker = new UserTrackDuty({worker})
+        let savetracker = await tracker.save();
+        res.json(savetracker)
 
     }catch(error){
         console.error(error.message);
@@ -97,38 +94,36 @@ router.post('/track',[
     }
 })
 
+//update tracking: '/track/:id'
 router.put('/track/:id',async(req, res)=>{
    
     try{
         const{latitude, longitude, end_time} = req.body;
         const newUserTrack = {};
         if(latitude){
-            newUserTrack.latitude = latitude
+            newUserTrack.latitude = latitude;
         }
         if(longitude){
-            newUserTrack.longitude = longitude
+            newUserTrack.longitude = longitude;
         }
 
         if(end_time){
-            newUserTrack.end_time = end_time
+            newUserTrack.end_time = end_time;
         }
         let currentTrack = await UserTrackDuty.findById(req.params.id);
 
         if(!currentTrack){
             return res.status(400).json({error:'track id does not exist', success:false});
         }
-        currentTrack = await UserTrackDuty.findByIdAndUpdate(req.params.id, {$set:newUserTrack}, {new:true})
+        currentTrack = await UserTrackDuty.findByIdAndUpdate(req.params.id, {$set:newUserTrack}, {new:true});
        
-        res.send({currentTrack})
+        res.json(currentTrack);
 
     }catch(error){
         console.error(error.message);
-        res.status(500).send("Internal Server error !!")
+        res.status(500).send("Internal Server error !!");
     }
 })
-
-
-
 
 
 module.exports = router;
