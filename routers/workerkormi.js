@@ -87,6 +87,7 @@ router.post('/track',[
         const tracker = new UserTrackDuty({worker})
         let savetracker = await tracker.save();
         res.json(savetracker)
+        console.log(savetracker._id)
 
     }catch(error){
         console.error(error.message);
@@ -118,12 +119,29 @@ router.put('/track/:id',async(req, res)=>{
         currentTrack = await UserTrackDuty.findByIdAndUpdate(req.params.id, {$set:newUserTrack}, {new:true});
        
         res.json(currentTrack);
+        console.log("Ok updated Succesfully")
 
     }catch(error){
         console.error(error.message);
         res.status(500).send("Internal Server error !!");
     }
 })
+
+
+//track by tracking id '/trackUser/:_id'
+router.get("/trackUser/:id",async(req, res)=>{
+    try{
+        let trackData = await UserTrackDuty.findOne({_id:req.params.id});
+        if(!trackData){
+            res.status(400).json({mesasge:"Invalid tracking details"});
+        }
+        res.json({trackData});
+        
+    }catch(err){
+        console.log(err.message);
+        res.status(500).send("Internal Server error");
+    }
+});
 
 
 module.exports = router;

@@ -180,7 +180,10 @@ router.get("/getAllDuties/:id", async (req, res)=>{
 router.get("/trackWorker/:id", async(req, res)=>{
     try{
         let trackData = await UserTrackDuty.findOne({worker:req.params.id});
-        res.json(trackData);
+        if(!trackData){
+            res.status(400).json({"mesasge":"Invalid tracking details"})
+        }
+        res.status(200).json(trackData);
     }catch(err){
         console.log(err.message);
         res.status(500).send("Internal Server error");
