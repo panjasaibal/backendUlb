@@ -21,7 +21,7 @@ router.post('/loginworker',[
     try{
         let worker = await Worker.findOne({phone:req.body.phone});
         if(worker===null){
-            return res.status(400).json({'error':"Woker not found"});
+            return res.status(400).json({error:"Woker not found"});
         }
         const data = {result:{worker}, success:true};
         res.json(data);
@@ -44,7 +44,6 @@ router.put("/updateDuty/:id", async(req, res)=>{
     if(endtime){newDuty.endtime = endtime}
     if(latitude){newDuty.latitude = latitude}
     if(longitude){newDuty.longitude = longitude}
-
     let duty = await Duty.findById(req.params.id);
 
     if(!duty){
