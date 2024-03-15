@@ -6,45 +6,12 @@ const {body, validationResult} = require('express-validator');
 const Worker = require('../model/workers');
 const Duty = require('../model/duty');
 const UserTrackDuty = require('../model/usertrackduty');
-
-//create Admin "/createadmin"
-router.post('/createadmin',[
-    body('name','Please enter a valid name').isLength({min:3}),
-    body('email','Please enter a valid email').isEmail(),
-    body('passwd','Password should be atleast 4 charecters').isLength({min:4}),
-
-], async(req, res)=>{
-    const errors = validationResult(req);
-
-    if(!errors.isEmpty()){
-        return res.status(400).json({errors:errors.array()});
-    }
-    try {
-        let adminUser = await Adminstration.findOne({email:req.body.email});
-        if(adminUser){
-            return res.status(400).json({error:'email id already exists'})
-        }
-        adminUser = await Adminstration.create({
-            name:req.body.name,
-            email:req.body.email,
-            passwd:req.body.passwd
-        }) 
-
-        const data = {adminUser:{id:adminUser._id}}
-        res.send(data);
-
-    }catch(error){
-        console.error(error.message); 
-       res.status(500).send('Internal server error')
-
-    }
-
-    
-})
+const paymentStatus = require('../middleware/paymentCheck.middleware');
+const fetchAdmin = require('../middleware/admin.middleware');
 
 //admin login "/adminlogin"
 
-router.post('/loginadmin',[
+router.post('/loginadmin',paymentStatus,[
     body('email','Please enter a valid email').isEmail(),
     body('passwd','Password should be atleast 4 charecters').isLength({min:4}),
 
@@ -68,15 +35,11 @@ router.post('/loginadmin',[
     }
 })
 
-router.get('/get', (req, res)=>{
-        res.json({'res':'Hello i am api'})
-})
-
-
 //create Admin "/addworker"
-router.post('/addworker',[
+router.post('/addworker',fetchAdmin,[
     body('name','Please enter a valid name').isLength({min:3}),
-    body('phone','Please enter a valid phone number').isLength({min:10,max:10})
+    body('phone','Please enter a valid phone number').isLength({min:10,max:10}),
+    body('admin'),
    
 ], async(req, res)=>{
     const errors = validationResult(req);
@@ -87,12 +50,13 @@ router.post('/addworker',[
     try {
         let worker = await Worker.findOne({phone:req.body.phone});
         if(worker){
-            return res.status(400).json({error:'user already exists with this phone number', success:false})
+            return res.status(400).json({error:'user already exists with this phone number', success:false});
         }
         worker = await Worker.create({
+            admin:req.body.admin,
             name:req.body.name,
             phone:req.body.phone
-        }) 
+        });
 
         const data = {id:worker._id, success:true}
         res.send(data);
@@ -104,6 +68,23 @@ router.post('/addworker',[
     }
     
 })
+
+//get allworker for each admin
+
+router.post('/getWorkers', fetchAdmin, async(req, res)=>{
+
+    try{
+        let workers = await Worker.find({admin:req.body.admin});
+        if(!workers){
+            return res.status(204).send({message:"no wrokers present"});
+        }
+        res.status(200).json(workers);
+
+    }catch(error){
+        console.error(error.mesasge);
+        res.status(500).send('Internal server error');
+    }
+});
 
 //get worker "/getworker/:phonenumber"
 
@@ -132,7 +113,8 @@ router.get('/getworker/:phone', async(req, res)=>{
 router.post('/addduty',[
     body('name','Please enter a valid name').isLength({min:3}),
     body('description','Please enter a valid phone number').isLength({min:1}),
-    body('worker')
+    body('worker'),
+    body('admin')
 
 ], async(req, res)=>{
     const errors = validationResult(req);
@@ -189,6 +171,11 @@ router.get("/trackWorker/:id", async(req, res)=>{
         res.status(500).send("Internal Server error");
     }
 });
+
+ //removeWorker
+router.delete('/:id',async(req,res)=>{
+
+})
 
 module.exports = router;
 

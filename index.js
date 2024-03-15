@@ -12,6 +12,7 @@ connectToMoongoose();
 
 app.use(express.json());
 
+app.use('/api/super', require('./routers/superAdmin.route'));
 app.use('/api/admin', require('./routers/admin'));
 app.use('/api/worker', require('./routers/workerkormi'));
 app.use('/api/track', require('./routers/trackeRoutes'));

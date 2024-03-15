@@ -7,8 +7,8 @@ const TrackSchema = new Schema({
     timestamp:{type:String, default:Date.now},
     date:{type:String,default: date},
     worker:{type: mongoose.Schema.Types.ObjectId, ref:'workers', required: true},
-    latitude:{type:String },
-    longitude:{type:String},
+    latitude:{type:String},
+    longitude:{type:String}
 })
 
 const Tracker = mongoose.model('tracker', TrackSchema);

@@ -19,7 +19,7 @@ router.post('/loginworker',[
         return res.status(400).json({errors:errors.array()});
     }
     try{
-        let worker = await Worker.findOne({phone:req.body.phone});
+        let worker = await Worker.findOne({phone:req.body.phone}).select('-admin');
         if(worker===null){
             return res.status(400).json({error:"Woker not found"});
         }
