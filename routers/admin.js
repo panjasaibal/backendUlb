@@ -26,8 +26,8 @@ router.post('/loginadmin',paymentStatus,[
         if(adminUser===null || adminUser.passwd!==req.body.passwd){
             return res.status(400).json({'error':"Incorrect email or password", success:false});
         }
-        const data = {'id':adminUser._id,'name':adminUser.name, success:true};
-        res.send(data);
+        const data = {'id':adminUser._id,'name':adminUser.name, access:adminUser.access, email:adminUser.email};
+        res.json({result:data});
 
     }catch(error){
         console.error(error.message); 
