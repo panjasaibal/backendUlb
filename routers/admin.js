@@ -26,7 +26,7 @@ router.post('/loginadmin',paymentStatus,[
         if(adminUser===null || adminUser.passwd!==req.body.passwd){
             return res.status(400).json({'error':"Incorrect email or password", success:false});
         }
-        const data = {'id':adminUser._id,'name':adminUser.name, access:adminUser.access, email:adminUser.email};
+        const data = {id:adminUser._id, name:adminUser.name, access:adminUser.access, email:adminUser.email};
         res.json({result:data});
 
     }catch(error){
@@ -59,7 +59,7 @@ router.post('/addworker',fetchAdmin,[
         });
 
         const data = {id:worker._id, success:true}
-        res.send(data);
+        res.json(data);
 
     }catch(error){
         console.error(error.message); 
@@ -71,12 +71,11 @@ router.post('/addworker',fetchAdmin,[
 
 //get allworker for each admin
 
-router.post('/getWorkers', fetchAdmin, async(req, res)=>{
-
+router.get('/getAllWorker/:admin', async(req, res)=>{
     try{
-        let workers = await Worker.find({admin:req.body.admin});
+        let workers = await Worker.find({admin:req.params.admin});
         if(!workers){
-            return res.status(204).send({message:"no wrokers present"});
+            return res.status(204).json({message:"no wrokers present"});
         }
         res.status(200).json(workers);
 
@@ -98,7 +97,7 @@ router.get('/getworker/:phone', async(req, res)=>{
         if(worker===null){
             return res.status(400).json({errors:"Phone number should have 10 charecters"});
         }
-        res.send({worker});
+        res.json(worker);
 
     }catch(error){
         console.error(error.message); 
@@ -165,7 +164,7 @@ router.get("/trackWorker/:id", async(req, res)=>{
         if(!trackData){
             res.status(400).json({"mesasge":"Invalid tracking details"})
         }
-        res.status(200).json(trackData);
+        res.json(trackData);
     }catch(err){
         console.log(err.message);
         res.status(500).send("Internal Server error");
@@ -173,7 +172,20 @@ router.get("/trackWorker/:id", async(req, res)=>{
 });
 
  //removeWorker
-router.delete('/:id',async(req,res)=>{
+router.delete('/:adminId/:id',async(req,res)=>{
+    let worker = await Worker.findById(req.params.id)
+    console.log("wrkr",worker)
+    if(!worker){
+        return res.status(404).json({mesasge:"Nor Found"});
+    }
+    if(req.params.adminId !== worker.admin.toString()){
+        console.log("Admin:",worker.admin);
+        console.log("params ",req.params.adminId)
+        return res.status(401).json({mesasge:"No Access"});
+    }
+    worker = await Worker.findByIdAndDelete(req.params.id);
+    res.json({message:"Worker has been removed successfully"})
+
 
 })
 

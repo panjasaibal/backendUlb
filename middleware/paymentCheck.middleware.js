@@ -2,7 +2,7 @@ const Admin = require('../model/adminstration');
 
 const paymentStatus = async(req,res,next)=>{
 
-    let currentAdmin = await Admin.findOne({email:req.body.email, passwd:req.body.passwd});
+    let currentAdmin = await Admin.findOne({email:req.body.email});
     if(!currentAdmin.access){
         console.log(currentAdmin)
         console.log(currentAdmin.access)
