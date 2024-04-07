@@ -6,6 +6,7 @@ const {body, validationResult} = require('express-validator');
 const Worker = require('../model/workers');
 const Duty = require('../model/duty');
 const UserTrackDuty = require('../model/usertrackduty');
+const Tracker = require('../model/tracker');
 const paymentStatus = require('../middleware/paymentCheck.middleware');
 const fetchAdmin = require('../middleware/admin.middleware');
 
@@ -63,10 +64,8 @@ router.post('/addworker',fetchAdmin,[
 
     }catch(error){
         console.error(error.message); 
-       res.status(500).send('Internal server error')
-
+       res.status(500).send('Internal server error');
     }
-    
 })
 
 //get allworker for each admin
@@ -102,10 +101,8 @@ router.get('/getworker/:phone', async(req, res)=>{
     }catch(error){
         console.error(error.message); 
        res.status(500).send('Internal server error')
-
     }
-    
-})
+});
 
 //add duty "/addduty"
 
@@ -140,7 +137,7 @@ router.post('/addduty',[
 
     }
 
-})
+});
 
 //get All duties of the specific worker "/getAllDuties"
 
@@ -155,6 +152,34 @@ router.get("/getAllDuties/:id", async (req, res)=>{
         res.status(500).send("Internal Server error !!");
     }
 });
+
+//get tracking details for workers of the particular admin
+
+router.get('/getTracks/:adminId', async(req,res)=>{
+    try{
+        let admin = await Adminstration.findById(req.params.adminId);
+        if(!admin){
+            return res.status(500).json({error:"Bad request"});
+        }
+        let workers = await Worker.find({admin:req.params.adminId});
+        let tracks = []
+        const date = new Date().toLocaleDateString()
+        console.log(date)
+        for(let worker of workers){
+            let track = await Tracker.findOne({worker:worker._id}).sort({_id:-1});
+            if(track){
+                let obj = {data:track,workerName:worker.name,phone:worker.phone}
+                tracks.push(obj);
+            }
+        }
+        //console.log(workers)
+        res.json(tracks);
+    }catch(e){
+        console.log(err.message);
+        res.status(500).send("Internal Server error");
+    }
+});
+
 
 //get tracking details of specific worker
 
@@ -173,21 +198,26 @@ router.get("/trackWorker/:id", async(req, res)=>{
 
  //removeWorker
 router.delete('/:adminId/:id',async(req,res)=>{
-    let worker = await Worker.findById(req.params.id)
-    console.log("wrkr",worker)
-    if(!worker){
-        return res.status(404).json({mesasge:"Nor Found"});
-    }
-    if(req.params.adminId !== worker.admin.toString()){
-        console.log("Admin:",worker.admin);
-        console.log("params ",req.params.adminId)
-        return res.status(401).json({mesasge:"No Access"});
-    }
-    worker = await Worker.findByIdAndDelete(req.params.id);
-    res.json({message:"Worker has been removed successfully"})
+    try{
+        let worker = await Worker.findById(req.params.id)
+        if(!worker){
+            return res.status(404).json({mesasge:"Nor Found"});
+        }
 
+        if(req.params.adminId !== worker.admin.toString()){
+            return res.status(401).json({mesasge:"No Access"});
+        }
+        worker = await Worker.findByIdAndDelete(req.params.id);
+        console.log("deleted");
+        res.json({message:"Worker has been removed successfully"});
+    
+    }catch(e){
+        console.log(e.mesasge);
+        res.status(500).send("Internal Server Error");
+    }
+    
 
-})
+});
 
 module.exports = router;
 
