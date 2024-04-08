@@ -27,7 +27,7 @@ router.post('/loginadmin',paymentStatus,[
         if(adminUser===null || adminUser.passwd!==req.body.passwd){
             return res.status(400).json({'error':"Incorrect email or password", success:false});
         }
-        const data = {id:adminUser._id, name:adminUser.name, access:adminUser.access, email:adminUser.email};
+        const data = {id:adminUser._id.toString(), name:adminUser.name, access:adminUser.access, email:adminUser.email};
         res.json({result:data});
 
     }catch(error){
@@ -166,7 +166,7 @@ router.get('/getTracks/:adminId', async(req,res)=>{
         const date = new Date().toLocaleDateString()
         console.log(date)
         for(let worker of workers){
-            let track = await Tracker.findOne({worker:worker._id}).sort({_id:-1});
+            let track = await Tracker.findOne({worker:worker._id.toString()}).sort({_id:-1});
             if(track){
                 let obj = {data:track,workerName:worker.name,phone:worker.phone}
                 tracks.push(obj);
@@ -175,7 +175,7 @@ router.get('/getTracks/:adminId', async(req,res)=>{
         //console.log(workers)
         res.json(tracks);
     }catch(e){
-        console.log(err.message);
+        console.log(e.message);
         res.status(500).send("Internal Server error");
     }
 });

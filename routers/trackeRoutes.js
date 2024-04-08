@@ -39,8 +39,7 @@ router.get("/:id", async (req, res) => {
         .status(404)
         .json({ error: "track id does not exist", success: false });
     }
-    console.log(currentTracking._id);
-    res.send({currentTracking});
+    res.json(currentTracking);
 
   } catch (error) {
     console.error(error.message);
