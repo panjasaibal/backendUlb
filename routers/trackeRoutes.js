@@ -53,16 +53,17 @@ router.post(
   "/",
   [
     body("latitude", "Should not be empty").isLength({min:1}),
-    body("longitude", "Should not be empty").isLength({min:1}),
+    body("longitude", "Should not be empty").isLength({min:1})
   ],async (req,res) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()){
      return res.status(400).json({errors:errors.array});
     }
     try{
-      const { worker, latitude, longitude } = req.body;
+      const { worker, address, latitude, longitude } = req.body;
       let newUserTrack = await Tracker.create({
         worker: worker,
+        address:address,
         latitude: latitude,
         longitude: longitude,
       });

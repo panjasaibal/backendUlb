@@ -29,7 +29,6 @@ router.post('/loginadmin',paymentStatus,[
         }
         const data = {id:adminUser._id.toString(), name:adminUser.name, access:adminUser.access, email:adminUser.email};
         res.json({result:data});
-
     }catch(error){
         console.error(error.message); 
         res.status(500).send('Internal server error');
@@ -129,7 +128,7 @@ router.post('/addduty',[
         const newDuty = new Duty({name, description, worker});
         let savedDuty = newDuty.save();
 
-        res.send(savedDuty);
+        res.json(savedDuty);
 
     }catch(error){
         console.error(error.message); 
@@ -157,7 +156,7 @@ router.get("/getAllDuties/:id", async (req, res)=>{
 
 router.get('/getTracks/:adminId', async(req,res)=>{
     try{
-        let admin = await Adminstration.findById(req.params.adminId);
+        let admin = await Adminstration.findById(req.params.adminId).select('-superadmin');
         if(!admin){
             return res.status(500).json({error:"Bad request"});
         }
@@ -166,7 +165,7 @@ router.get('/getTracks/:adminId', async(req,res)=>{
         const date = new Date().toLocaleDateString()
         console.log(date)
         for(let worker of workers){
-            let track = await Tracker.findOne({worker:worker._id.toString()}).sort({_id:-1});
+            let track = await Tracker.findOne({worker:worker._id.toString(), date:date}).sort({_id:-1});
             if(track){
                 let obj = {data:track,workerName:worker.name,phone:worker.phone}
                 tracks.push(obj);
@@ -179,7 +178,6 @@ router.get('/getTracks/:adminId', async(req,res)=>{
         res.status(500).send("Internal Server error");
     }
 });
-
 
 //get tracking details of specific worker
 
@@ -215,8 +213,6 @@ router.delete('/:adminId/:id',async(req,res)=>{
         console.log(e.mesasge);
         res.status(500).send("Internal Server Error");
     }
-    
-
 });
 
 module.exports = router;
