@@ -9,7 +9,7 @@ const UserTrackSchema = new Schema({
     longitude:{type:String},
     start_time:{type:Date, default:Date.now},
     end_time:{type:Date}
-})
+});
 
 const UserTrackDuty = mongoose.model('usertrackduty', UserTrackSchema);
 UserTrackDuty.createIndexes();

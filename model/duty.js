@@ -1,16 +1,20 @@
+const { type } = require('express/lib/response');
 const mongoose = require('mongoose');
+const genarateTodayDate = require('../util/date.util');
 const { Schema } = mongoose;
 
+const date = genarateTodayDate();
 const DutySchema = new Schema({
-    name:{type:String, required:true},
+    duty_name:{type:String, required:true},
     description:{type:String, required:true},
-    worker:{type:mongoose.Schema.Types.ObjectId, ref:'workers', required:true},
-    duration:{type:String, default:"0"},
+    place:{type:String},
+    supervisor:{type:mongoose.Schema.Types.ObjectId, ref:'supervisor', required:true},
+    workers:{type:Array, required:true},
     completed:{type:Boolean, default:false},
-    date:{type:Date, default:Date.now},
+    date:{type:String, default:date},
     endtime:{type:Date},
-    latitude:{type:String,default:"null"},
-    longitude:{type:String,default:"null"}
+    image:{type:String},
+    timestamp:{type:Date,default:Date.now},
   });
   
   const Duty = mongoose.model('duty', DutySchema);

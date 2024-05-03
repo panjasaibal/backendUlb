@@ -2,6 +2,7 @@ const {validationResult } = require("express-validator");
 const Adminstration = require("../model/adminstration");
 const Worker = require("../model/workers");
 const Tracker = require("../model/tracker");
+const Supervisor = require("../model/supervisor.model");
 
 exports.adminLogin = async(req,res)=>{
 
@@ -52,6 +53,34 @@ exports.addWorker = async(req,res)=>{
     }
 } 
 
+
+exports.addSupervisor = async(req,res)=>{
+    const errors = validationResult(req);
+    
+    if(!errors.isEmpty()){
+        return res.status(400).json({errors:errors.array()});
+    }
+    try {
+        let supervisor = await Supervisor.findOne({phone:req.body.phone});
+        if(supervisor){
+            return res.status(400).json({error:'user already exists with this phone number', success:false});
+        }
+        supervisor = await Supervisor.create({
+            admin:req.body.admin,
+            name:req.body.name,
+            phone:req.body.phone,
+        });
+
+        const data = {id:supervisor._id, success:true}
+        res.json(data);
+
+    }catch(error){
+        console.error(error.message); 
+       res.status(500).send('Internal server error');
+    }
+
+}
+
 exports.getAllWorker = async(req, res)=>{
     try{
         let workers = await Worker.find({admin:req.params.admin});
@@ -64,6 +93,10 @@ exports.getAllWorker = async(req, res)=>{
         console.error(error.mesasge);
         res.status(500).send('Internal server error');
     }
+};
+
+exports.getAllSuperVisor = async(req,res)=>{
+
 };
 
 exports.getWorkerByPhone = async(req,res)=>{

@@ -20,13 +20,21 @@ router.post('/loginadmin',paymentStatus,[
     adminController.adminLogin
 );
 
-//create Admin "/addworker"
+//create Worker "/addworker"
 router.post('/addworker',fetchAdmin,[
     body('name','Please enter a valid name').isLength({min:3}),
     body('phone','Please enter a valid phone number').isLength({min:10,max:10}),
     body('admin'),
    
 ], adminController.addWorker);
+
+//create supervisor "/addsupervisor"
+
+router.post('/addsupervisor', fetchAdmin,[
+    body('name','Please enter a valid name').isLength({min:3}),
+    body('phone','Please enter a valid phone number').isLength({min:10,max:10}),
+    body('admin'),
+], adminController.addSupervisor);
 
 //get allworker for each admin
 

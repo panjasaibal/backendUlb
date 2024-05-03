@@ -42,6 +42,7 @@ exports.createTrackerForWorker = async (req,res) => {
         latitude: latitude,
         longitude: longitude,
       });
+      console.log(newUserTrack);
       res.status(201).json({trackId:newUserTrack._id});
       
     }catch(error){

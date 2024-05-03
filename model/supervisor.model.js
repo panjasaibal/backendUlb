@@ -8,7 +8,6 @@ const SuperVisorSchema = new Schema({
     address: {type:String, default:"null"},
     profile:{type:String, default:"null"},
     adhar:{type:String, default:"null"},
-    status:{type:String, default:'offline'}, 
     timestamp: { type: Date, default: Date.now },
   });
   
