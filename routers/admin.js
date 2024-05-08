@@ -5,7 +5,7 @@ const router = express.Router();
 const {body, validationResult} = require('express-validator');
 const Worker = require('../model/workers');
 const Duty = require('../model/duty');
-const UserTrackDuty = require('../model/usertrackduty');
+
 const Tracker = require('../model/tracker');
 const paymentStatus = require('../middleware/paymentCheck.middleware');
 const fetchAdmin = require('../middleware/admin.middleware');

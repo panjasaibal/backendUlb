@@ -23,28 +23,28 @@ exports.loginSupervisor = async (req, res)=>{
     }
 }
 
-// exports.genarateDuty = async(req,res)=>{
-//     const errors = validationResult(req);
+exports.genarateDuty = async(req,res)=>{
+    const errors = validationResult(req);
 
-//     if(!errors.isEmpty()){
-//         return res.status(400).json({errors:errors.array()});
-//     }
-//     try{
-//         const{duty_name, description,place,supervisor, workers} = req.body;
+    if(!errors.isEmpty()){
+        return res.status(400).json({errors:errors.array()});
+    }
+    try{
+        const{duty_name, description,place,supervisor, workers} = req.body;
 
-//         const duty = await Duty.create({
-//             duty_name:duty_name,
-//             description:description,
-//             place:place,
-//             supervisor:supervisor,
-//             workers:workers
-//         });
+        const duty = await Duty.create({
+            duty_name:duty_name,
+            description:description,
+            place:place,
+            supervisor:supervisor,
+            workers:workers
+        });
 
-//         const data = {success:true,duty_id:duty._id};
-//         res.json(data);
+        const data = {success:true,duty_id:duty._id};
+        res.json(data);
 
-//     }catch(error){
-//         console.error(error.message); 
-//         res.status(500).send('Internal server error');
-//     }
-// }
+    }catch(error){
+        console.error(error.message); 
+        res.status(500).send('Internal server error');
+    }
+}

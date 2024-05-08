@@ -4,7 +4,6 @@ const Worker = require('../model/workers');
 const router = express.Router();
 const {body, validationResult} = require('express-validator');
 const Duty = require('../model/duty');
-const UserTrackDuty = require('../model/usertrackduty');
 
 //login worker "/loginworker"
 

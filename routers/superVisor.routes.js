@@ -10,6 +10,9 @@ router.post('/loginsupervisor',[
     body('phone','Enter a valid phone number').isLength({min:10, max:10}),
 ], supervisorController.loginSupervisor);
 
+//create duty
+
+router.post('/createduty',[], supervisorController.genarateDuty);
 
 
 module.exports = router;

@@ -9,7 +9,7 @@ const DutySchema = new Schema({
     description:{type:String, required:true},
     place:{type:String},
     supervisor:{type:mongoose.Schema.Types.ObjectId, ref:'supervisor', required:true},
-    workers:{type:Array, required:true},
+    workers:{type:[String], required:true},
     completed:{type:Boolean, default:false},
     date:{type:String, default:date},
     endtime:{type:Date},

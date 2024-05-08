@@ -1,9 +1,9 @@
 const Tracker = require("../model/tracker");
 const { validationResult } = require("express-validator");
 
-exports.getAllTrackOfWorker = async(req,res)=>{
+exports.getAllTrackOfUser = async(req,res)=>{
     try{
-      const allTrack = await Tracker.find({worker:req.params.id});
+      const allTrack = await Tracker.find({user_id:req.params.id});
       if(allTrack.length===0){
        return res.status(404).send({error:'No Such Records'});
       }
@@ -15,9 +15,9 @@ exports.getAllTrackOfWorker = async(req,res)=>{
    
 };
 
-exports.getAllTrackByWorkerAndDate = async(req,res)=>{
+exports.getAllTrackByUserAndDate = async(req,res)=>{
     try{
-      const allTrack = await Tracker.find({date:req.body.date, worker:req.body.worker});
+      const allTrack = await Tracker.find({date:req.body.date, user_id:req.body.user_id});
       if(allTrack.length===0){
        return res.status(404).send({error:'No Such Records'});
       }
@@ -29,15 +29,15 @@ exports.getAllTrackByWorkerAndDate = async(req,res)=>{
 }; 
 
 
-exports.createTrackerForWorker = async (req,res) => {
+exports.createTrackerForUser = async (req,res) => {
     const errors = validationResult(req);
     if(!errors.isEmpty()){
      return res.status(400).json({errors:errors.array});
     }
     try{
-      const { worker, address, latitude, longitude } = req.body;
+      const { user_id, address, latitude, longitude } = req.body;
       let newUserTrack = await Tracker.create({
-        worker: worker,
+        user_id: user_id,
         address:address,
         latitude: latitude,
         longitude: longitude,

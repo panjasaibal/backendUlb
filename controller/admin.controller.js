@@ -2,6 +2,7 @@ const {validationResult } = require("express-validator");
 const Adminstration = require("../model/adminstration");
 const Worker = require("../model/workers");
 const Tracker = require("../model/tracker");
+const Duty = require("../model/duty");
 const Supervisor = require("../model/supervisor.model");
 
 exports.adminLogin = async(req,res)=>{
@@ -96,7 +97,7 @@ exports.getAllWorker = async(req, res)=>{
 };
 
 exports.getAllSuperVisor = async(req,res)=>{
-
+    
 };
 
 exports.getWorkerByPhone = async(req,res)=>{
@@ -142,19 +143,21 @@ exports.getLatestTracksOfWorkerByAdminId = async(req,res)=>{
     }
 };
 
-// exports.getTracksByWorkers = async(req, res)=>{
-//     try{
-    //don't forget to import user track if required
-//         let trackData = await UserTrackDuty.findOne({worker:req.params.id});
-//         if(!trackData){
-//             res.status(400).json({"mesasge":"Invalid tracking details"})
-//         }
-//         res.json(trackData);
-//     }catch(err){
-//         console.log(err.message);
-//         res.status(500).send("Internal Server error");
-//     }
-// };
+
+exports.getDutyBySupervisor = async(req,res)=>{
+    const {supervisor, date} = req.body;
+    try{
+        const duty = await Duty.find({supervisor:supervisor,date:date});
+        if(duty==null){
+            return res.status(400).json("No such duties");
+        }
+        const data = {data:duty,success:true};
+        res.json(data);
+    }catch(err){
+        console.log(e.message);
+        res.status(500).send("Internal Server error");
+    }
+}
 
 exports.deleteWorkerById = async(req,res)=>{
     try{
