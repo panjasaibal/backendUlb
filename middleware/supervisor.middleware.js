@@ -7,10 +7,8 @@ const fetchSupervisor = async(req,res,next)=>{
         const currentSupervisor = await Supervisor.findById(req.body.supervisor);
         if(!currentSupervisor){
             //throw new ApiError(401,"Unauthorized");
-            res.status(401).json({message: "unauthorized"});
+           return res.status(401).json({message: "unauthorized"});
         }
-
-        
         next();
     }catch(error){
        // throw new ApiError(500,"Something went wrong");
