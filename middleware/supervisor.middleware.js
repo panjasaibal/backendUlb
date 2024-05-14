@@ -9,6 +9,8 @@ const fetchSupervisor = async(req,res,next)=>{
             //throw new ApiError(401,"Unauthorized");
             res.status(401).json({message: "unauthorized"});
         }
+
+        
         next();
     }catch(error){
        // throw new ApiError(500,"Something went wrong");
