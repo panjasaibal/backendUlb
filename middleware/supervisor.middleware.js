@@ -1,13 +1,19 @@
 const Supervisor = require('../model/supervisor.model');
+const ApiError = require('../util/ApiError');
 
 const fetchSupervisor = async(req,res,next)=>{
+
     try{
         const currentSupervisor = await Supervisor.findById(req.body.supervisor);
         if(!currentSupervisor){
-            res.status(401).json("Unauthorized");
+            //throw new ApiError(401,"Unauthorized");
+            res.status(401).json({message: "unauthorized"});
         }
         next();
     }catch(error){
-        res.status(500).json(error.message);
+       // throw new ApiError(500,"Something went wrong");
+        res.status(500).json({message: "Something went wrong"});
     }
 }
+
+module.exports = fetchSupervisor;

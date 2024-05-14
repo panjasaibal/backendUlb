@@ -2,6 +2,8 @@ const {validationResult } = require("express-validator");
 
 const Supervisor = require('../model/supervisor.model');
 const Duty = require('../model/duty');
+const asyncHandler = require("../util/asyncHandler");
+const ApiError = require("../util/ApiError");
 
 exports.loginSupervisor = async (req, res)=>{
     const errors = validationResult(req);
@@ -48,3 +50,13 @@ exports.genarateDuty = async(req,res)=>{
         res.status(500).send('Internal server error');
     }
 }
+
+exports.getDuty = asyncHandler(async(req,res)=>{
+    const duty = await Duty.findById(req.params.id);
+    if(!duty){
+        //throw new ApiError(404,"Not Found");
+        return res.status(404).json({message:"Not Found", success:"false"});
+    }
+
+    res.status(200).json({data:duty, success:"true"})
+})

@@ -8,7 +8,6 @@ const WorkersSchema = new Schema({
   phone: {type:String, required:true, unique:true},
   address: {type:String, default:"null"},
   adhar:{type:String, default:"null"},
-  status:{type:String, default:'offline'}, 
   timestamp: { type: Date, default: Date.now },
 });
 
