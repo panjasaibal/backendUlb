@@ -4,7 +4,8 @@ const {body} = require('express-validator');
 const paymentStatus = require('../middleware/paymentCheck.middleware');
 const fetchAdmin = require('../middleware/admin.middleware');
 const fetchSupervisor = require('../middleware/supervisor.middleware');
-const adminController = require('../controller/admin.controller')
+const adminController = require('../controller/admin.controller');
+const upload = require('../middleware/multer.middleware');
 
 //admin login "/adminlogin"
 
@@ -25,7 +26,7 @@ router.post('/addworker',fetchSupervisor,[
 
 //create supervisor "/addsupervisor"
 
-router.post('/addsupervisor', fetchAdmin,[
+router.post('/addsupervisor', fetchAdmin, upload.single('supervisor_image'),[
     body('name','Please enter a valid name').isLength({min:3}),
     body('phone','Please enter a valid phone number').isLength({min:10,max:10}),
     body('admin'),
@@ -35,6 +36,10 @@ router.post('/addsupervisor', fetchAdmin,[
 
 router.get('/getAllWorker/:admin', adminController.getAllWorker);
 
+//get allSupervisor for each admin
+
+router.get('/getAllSupervisor/:admin', adminController.getAllSuperVisor);
+
 //get worker "/getworker/:phonenumber"
 
 router.get('/getworker/:phone', adminController.getWorkerByPhone);
@@ -42,6 +47,10 @@ router.get('/getworker/:phone', adminController.getWorkerByPhone);
 //get tracking details for workers of the particular admin
 
 router.get('/getTracks/:adminId', adminController.getLatestTracksOfWorkerByAdminId);
+
+//get tracking details for supervisor of the particular admin
+
+router.get('/getTracks/:adminId/:supervisor', adminController.getLatestTracksOfWorkerByAdminId);
 
 //get tracking details of specific worker
 

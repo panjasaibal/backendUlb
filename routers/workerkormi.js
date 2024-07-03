@@ -69,29 +69,29 @@ router.get("/getAllDuties/:id", async (req, res)=>{
 
 // create tracking "/track"
 
-router.post('/track',[
-    body('worker'),
+// router.post('/track',[
+//     body('worker'),
     
-],async(req, res)=>{
+// ],async(req, res)=>{
     
-    try{
-        const{worker} = req.body;
-        let currentWorker = await Worker.findOne({_id:worker});
+//     try{
+//         const{worker} = req.body;
+//         let currentWorker = await Worker.findOne({_id:worker});
 
-        if(!currentWorker){
-            return res.status(400).json({error:'worker does not exist'});
-        }
+//         if(!currentWorker){
+//             return res.status(400).json({error:'worker does not exist'});
+//         }
 
-        const tracker = new UserTrackDuty({worker})
-        let savetracker = await tracker.save();
-        res.json(savetracker)
-        console.log(savetracker._id)
+//         const tracker = new UserTrackDuty({worker})
+//         let savetracker = await tracker.save();
+//         res.json(savetracker)
+//         console.log(savetracker._id)
 
-    }catch(error){
-        console.error(error.message);
-        res.status(500).send("Internal Server error !!")
-    }
-})
+//     }catch(error){
+//         console.error(error.message);
+//         res.status(500).send("Internal Server error !!")
+//     }
+// })
 
 //update tracking: '/track/:id'
 router.put('/track/:id',async(req, res)=>{

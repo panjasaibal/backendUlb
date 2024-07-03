@@ -4,6 +4,7 @@ const {body, validationResult} = require('express-validator');
 //const supervisorController = require('../controller/supervisor.controller');
 const supervisorController = require('../controller/supervisor.controller');
 const fetchSupervisor = require('../middleware/supervisor.middleware');
+const upload = require('../middleware/multer.middleware');
 
 //supervisor login
 router.post('/loginsupervisor',[
@@ -13,18 +14,18 @@ router.post('/loginsupervisor',[
 
 //create duty
 
-router.post('/createduty',[
-
-],fetchSupervisor, supervisorController.genarateDuty);
-
+router.post('/createduty', upload.single('duty_image')
+,supervisorController.genarateDuty)
 
 //get duty by supervisor id
+router.get('/getDuty/:supervisor', fetchSupervisor, supervisorController.getDutyBySupervisor);
 
+//get workers by supervisor id
 
+router.get('/getWorkers/:supervisor', fetchSupervisor,supervisorController.getAllWorkersForSupervisor);
 
 //get duty by duty _id
 router.get('/:id',supervisorController.getDuty);
-
 
 
 module.exports = router;

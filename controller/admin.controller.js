@@ -4,117 +4,138 @@ const Worker = require("../model/workers");
 const Tracker = require("../model/tracker");
 const Duty = require("../model/duty");
 const Supervisor = require("../model/supervisor.model");
+const ApiResponse = require("../util/ApiResponse");
+const { uploadOnCloudinary } = require("../util/cloudinary");
+const asyncHandler = require("../util/asyncHandler");
+const ApiError = require("../util/ApiError");
 
-exports.adminLogin = async (req, res) => {
+exports.adminLogin = asyncHandler(async (req, res) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
-  try {
-    let adminUser = await Adminstration.findOne({ email: req.body.email });
-    if (adminUser === null || adminUser.passwd !== req.body.passwd) {
-      return res
-        .status(400)
-        .json({ error: "Incorrect email or password", success: false });
-    }
-    const data = {
-      id: adminUser._id.toString(),
-      name: adminUser.name,
-      access: adminUser.access,
-      email: adminUser.email,
-    };
-    res.json({ result: data });
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).send("Internal server error");
-  }
-};
 
-exports.addWorker = async (req, res) => {
+  let adminUser = await Adminstration.findOne({ email: req.body.email });
+  if (adminUser === null || adminUser.passwd !== req.body.passwd) {
+    return res
+      .status(400)
+      .json({ error: "Incorrect email or password", success: false });
+  }
+  const data = {
+    id: adminUser._id.toString(),
+    name: adminUser.name,
+    access: adminUser.access,
+    email: adminUser.email,
+  };
+  res.json({ result: data });
+});
+
+exports.addWorker = asyncHandler(async (req, res) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
-  try {
-    let worker = await Worker.findOne({ phone: req.body.phone });
-    if (worker) {
-      return res
-        .status(400)
-        .json({
-          error: "user already exists with this phone number",
-          success: false,
-        });
-    }
-    worker = await Worker.create({
-      admin: req.body.admin,
-      supervisor: req.body.supervisor,
-      name: req.body.name,
-      phone: req.body.phone,
+
+  let worker = await Worker.findOne({ phone: req.body.phone });
+  if (worker) {
+    return res.status(400).json({
+      error: "user already exists with this phone number",
+      success: false,
     });
-
-    const data = { id: worker._id, success: true };
-    res.json(data);
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).send("Internal server error");
   }
-};
+  worker = await Worker.create({
+    admin: req.body.admin,
+    supervisor: req.body.supervisor,
+    name: req.body.name,
+    phone: req.body.phone,
+  });
 
-exports.addSupervisor = async (req, res) => {
+  const data = { id: worker._id, success: true };
+  res.json(data);
+});
+
+exports.addSupervisor = asyncHandler(async (req, res) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
-  try {
-    let supervisor = await Supervisor.findOne({ phone: req.body.phone });
-    if (supervisor) {
-      return res
-        .status(400)
-        .json({
-          error: "user already exists with this phone number",
-          success: false,
-        });
-    }
-    supervisor = await Supervisor.create({
-      admin: req.body.admin,
-      name: req.body.name,
-      phone: req.body.phone,
+
+  let supervisor = await Supervisor.findOne({ phone: req.body.phone });
+  if (supervisor) {
+    return res.status(400).json({
+      error: "user already exists with this phone number",
+      success: false,
     });
-
-    const data = { id: supervisor._id, success: true };
-    res.json(data);
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).send("Internal server error");
   }
-};
+  supervisor = await Supervisor.create({
+    admin: req.body.admin,
+    name: req.body.name,
+    phone: req.body.phone,
+  });
 
-exports.getAllWorker = async (req, res) => {
-  try {
-    let workers = await Worker.find({ admin: req.params.admin });
-    if (!workers) {
-      return res.status(204).json({ message: "no wrokers present" });
-    }
-    res.status(200).json(workers);
-  } catch (error) {
-    console.error(error.mesasge);
-    res.status(500).send("Internal server error");
+  const imageLocalPath = req.file.path;
+  
+  if (imageLocalPath) {
+    const supervisorProfileUrl = await uploadOnCloudinary(imageLocalPath);
+    await updateProfileImage(supervisor, supervisorProfileUrl);
   }
-};
+  return res
+    .status(201)
+    .json(
+      new ApiResponse(
+        201,
+        supervisor._id,
+        "Supervisor created successfully.",
+        true
+      )
+    );
+});
 
-exports.getAllSuperVisor = async (req, res) => {};
+exports.getAllWorker = asyncHandler(async (req, res) => {
+  let workers = await Worker.find({ admin: req.params.admin });
+  if (!workers) {
+    return res.status(204).json({ message: "no wrokers present" });
+  }
+  return res.status(200).json(new ApiResponse(200, workers, null, true));
+});
 
-exports.getWorkerByPhone = async (req, res) => {
+exports.updateProfileOfSupervisor = asyncHandler(async(req, res)=>{
+  const supervisor = await Supervisor.findById(req.params.id);
+  if(supervisor == null){
+      throw new ApiError(400,"Supervisor does not exist with this id", null, null);
+  }
+
+  const imageLocalPath = req.files?.supervisor_image[0].path;
+  
+  if (!imageLocalPath) {
+    throw new ApiError(400, "image required", null, null);
+  }
+  const supervisorProfileUrl = await uploadOnCloudinary(imageLocalPath);
+  await updateProfileImage(supervisor, supervisorProfileUrl);
+  return res.status(200).json(new ApiResponse(200,"Updated Successfully", null, null))
+
+})
+
+exports.getAllSuperVisor = asyncHandler(async(req,res)=>{
+  let supervisors = await Supervisor.find({ admin: req.params.admin });
+  if (!supervisors) {
+    throw new ApiResponse(204,null,"no supervisors present", false);
+    
+  }
+  return res.status(200).json(new ApiResponse(200, supervisors, null, true));
+});
+
+
+exports.getWorkerByPhone = asyncHandler(async (req, res) => {
   const phoneNumber = req.params.phone;
   if (phoneNumber.length !== 10) {
     return res
       .status(400)
       .json({ errors: "Phone number should have 10 charecters" });
   }
-  try {
     const worker = await Worker.findOne({ phone: phoneNumber });
     if (worker === null) {
       return res
@@ -122,14 +143,10 @@ exports.getWorkerByPhone = async (req, res) => {
         .json({ errors: "Phone number should have 10 charecters" });
     }
     res.json(worker);
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).send("Internal server error");
-  }
-};
+  });
 
-exports.getLatestTracksOfWorkerByAdminId = async (req, res) => {
-  try {
+exports.getLatestTracksOfWorkerByAdminId = asyncHandler(async (req, res) => {
+ 
     let admin = await Adminstration.findById(req.params.adminId).select(
       "-superadmin"
     );
@@ -142,39 +159,57 @@ exports.getLatestTracksOfWorkerByAdminId = async (req, res) => {
     console.log(date);
     for (let worker of workers) {
       let track = await Tracker.findOne({
-        worker: worker._id.toString(),
+        user_id: worker._id.toString(),
+        model:'workers',
         date: date,
       }).sort({ _id: -1 });
-      if (track) {
-        let obj = { data: track, workerName: worker.name, phone: worker.phone };
-        tracks.push(obj);
+      if(track){
+        tracks.push(track);
       }
     }
     //console.log(workers)
     res.json(tracks);
-  } catch (e) {
-    console.log(e.message);
-    res.status(500).send("Internal Server error");
-  }
-};
+  });
 
-exports.getDutyBySupervisor = async (req, res) => {
+exports.getDutyBySupervisor = asyncHandler(async (req, res) => {
   const { supervisor, date } = req.body;
-  try {
+
     const duty = await Duty.find({ supervisor: supervisor, date: date });
     if (duty == null) {
       return res.status(400).json("No such duties");
     }
     const data = { data: duty, success: true };
-    res.json(data);
-  } catch (err) {
-    console.log(e.message);
-    res.status(500).send("Internal Server error");
-  }
-};
+    return res.status(200).json(new ApiResponse(200, data, null, true));
+  });
 
-exports.deleteWorkerById = async (req, res) => {
-  try {
+
+  exports.getLatestTracksOfSupervisorByAdminId = asyncHandler(async (req, res) => {
+ 
+    let admin = await Adminstration.findById(req.params.adminId).select(
+      "-superadmin"
+    );
+    if (!admin) {
+      return res.status(500).json({ error: "Bad request" });
+    }
+    let supervisors = await Supervisor.find({ admin: req.params.adminId }).select("-admin");
+    let tracks = [];
+    const date = new Date().toLocaleDateString();
+    console.log(date);
+    for (let supervisor of supervisors) {
+      let track = await Tracker.findOne({
+        user_id: supervisor._id.toString(),
+        model:'supervisor',
+        date: date,
+      }).sort({ _id: -1 });
+      if(track){
+        tracks.push(track);
+      }
+    }
+    res.status(200).json(new ApiResponse(200,tracks,tracks.length(),true));
+  });
+
+exports.deleteWorkerById = asyncHandler(async (req, res) => {
+
     let worker = await Worker.findById(req.params.id);
     if (!worker) {
       return res.status(404).json({ mesasge: "Nor Found" });
@@ -185,9 +220,45 @@ exports.deleteWorkerById = async (req, res) => {
     }
     worker = await Worker.findByIdAndDelete(req.params.id);
     console.log("deleted");
-    res.json({ message: "Worker has been removed successfully" });
-  } catch (e) {
-    console.log(e.mesasge);
-    res.status(500).send("Internal Server Error");
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, null, "Worker has been deleted successfully", true)
+      );
+  } );
+
+exports.deleteSupervisorById = asyncHandler(async (req, res) => {
+
+  let admin = await Adminstration.findById(req.params.adminId).select(
+    "-superadmin"
+  );
+
+  if (!admin) {
+    throw new ApiError(404, "Admin does not exist");
   }
-};
+
+    let supervisor = await Supervisor.findById(req.params.supervisor);
+    if (!supervisor) {
+      throw new ApiError(404,"Supervisor not found");
+    }
+
+    if (req.params.adminId !== supervisor.admin.toString()) {
+      throw new ApiError(401,"No Access");
+    }
+    supervisor = await Supervisor.findByIdAndDelete(req.params.id);
+    console.log("deleted");
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, null, "Supervisor has been deleted successfully", true)
+      );
+  } );
+
+const updateProfileImage = async(supervisor, supervisorProfileUrl)=>{
+  await Supervisor.findByIdAndUpdate(
+    supervisor._id,
+    { $set: { profile: supervisorProfileUrl.url } },
+    { new: true }
+  );
+
+}

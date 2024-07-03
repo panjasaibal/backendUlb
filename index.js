@@ -3,11 +3,16 @@ require('dotenv').config();
 const express = require('express');
 var cors = require('cors');
 const connectToMoongoose = require('./db');
+const path = require('path')
+const fs = require('fs');
 const errorLogger = require('./middleware/errorLogger.middleware');
 
 const app = express();
 
 app.use(cors());
+app.use(express.urlencoded({extended:true}))
+app.use(express.static("public"))
+//app.use(express.static(path.join(__dirname,'public')));
 
 connectToMoongoose();
 
