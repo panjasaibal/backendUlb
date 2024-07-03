@@ -44,6 +44,10 @@ router.get('/getAllSupervisor/:admin', adminController.getAllSuperVisor);
 
 router.get('/getworker/:phone', adminController.getWorkerByPhone);
 
+//get supervisor "/getsupervisor/:phonenumber"
+
+router.get('/getsupervisor/:phone', adminController.getSupervisorByPhone);
+
 //get tracking details for workers of the particular admin
 
 router.get('/getTracks/:adminId', adminController.getLatestTracksOfWorkerByAdminId);

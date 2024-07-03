@@ -117,17 +117,19 @@ exports.updateProfileOfSupervisor = asyncHandler(async(req, res)=>{
   await updateProfileImage(supervisor, supervisorProfileUrl);
   return res.status(200).json(new ApiResponse(200,"Updated Successfully", null, null))
 
-})
+});
 
 exports.getAllSuperVisor = asyncHandler(async(req,res)=>{
   let supervisors = await Supervisor.find({ admin: req.params.admin });
   if (!supervisors) {
-    throw new ApiResponse(204,null,"no supervisors present", false);
+    throw new ApiResponse(400,"no supervisors present", false);
     
+  }if(supervisors.length == 0){
+    throw new ApiError(400,"No Supervisor present", null, false);
   }
-  return res.status(200).json(new ApiResponse(200, supervisors, null, true));
+  
+  return res.status(200).json(new ApiResponse(200, supervisors, supervisors.length, true));
 });
-
 
 exports.getWorkerByPhone = asyncHandler(async (req, res) => {
   const phoneNumber = req.params.phone;
@@ -144,6 +146,18 @@ exports.getWorkerByPhone = asyncHandler(async (req, res) => {
     }
     res.json(worker);
   });
+
+exports.getSupervisorByPhone = asyncHandler(async(req,res)=>{
+  const phoneNumber = req.params.phone;
+  if (phoneNumber.length !== 10) {
+    throw new ApiError(500,"Phone number should be 10 digit");
+  }
+    const supervisor = await Supervisor.findOne({ phone: phoneNumber });
+    if (supervisor === null) {
+      throw new ApiError(404,"Not Found!!");
+    }
+    return res.status(200).json(new ApiResponse(200, supervisor, null,true));
+});
 
 exports.getLatestTracksOfWorkerByAdminId = asyncHandler(async (req, res) => {
  
@@ -225,7 +239,7 @@ exports.deleteWorkerById = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(200, null, "Worker has been deleted successfully", true)
       );
-  } );
+  });
 
 exports.deleteSupervisorById = asyncHandler(async (req, res) => {
 
@@ -252,13 +266,11 @@ exports.deleteSupervisorById = asyncHandler(async (req, res) => {
       .json(
         new ApiResponse(200, null, "Supervisor has been deleted successfully", true)
       );
-  } );
+  });
 
 const updateProfileImage = async(supervisor, supervisorProfileUrl)=>{
   await Supervisor.findByIdAndUpdate(
     supervisor._id,
     { $set: { profile: supervisorProfileUrl.url } },
     { new: true }
-  );
-
-}
+  )};
