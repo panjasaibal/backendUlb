@@ -38,7 +38,6 @@ exports.createTrackerForUser = async (req,res) => {
       const { user_id, address, latitude, longitude } = req.body;
       let newUserTrack = await Tracker.create({
         user_id: user_id,
-        address:address,
         latitude: latitude,
         longitude: longitude,
       });

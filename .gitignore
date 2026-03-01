@@ -2,3 +2,4 @@
 .env
 errLogger.log
 /public
+.npmrc
