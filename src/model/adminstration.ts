@@ -1,13 +1,11 @@
-const { type } = require('express/lib/response');
-const mongoose = require('mongoose');
-const { Schema } = mongoose;
+import mongoose from "mongoose";
 
-const AdminsSchema = new Schema({
+const AdminsSchema = new mongoose.Schema({
   superadmin:{type:mongoose.Schema.Types.ObjectId, ref:'superadmin',required:true},
   name: {type:String, required:true}, // String is shorthand for {type: String}
   email: {type:String, required:true, unique:true},
-  passwd: {type:String, required:true},
-  access:{type:Boolean, default:true},
+  role: { type: String, default: "ADMIN" },
+  subscription: { type: String, default: "FREE" },
   timestamp: { type: Date, default: Date.now},
 });
 
@@ -15,4 +13,4 @@ const Adminstration = mongoose.model('adminstration', AdminsSchema);
 Adminstration.createIndexes();
 
 
-module.exports = Adminstration;
+export {Adminstration};

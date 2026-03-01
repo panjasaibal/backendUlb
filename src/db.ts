@@ -1,10 +1,10 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
+import { config } from "./config";
 const url = 'mongodb://127.0.0.1:27017/ULbDatabse';
 
-const connectToMoongoose = async() => {
-    
+async function connectToMoongoose():Promise<void>{
     try{
-        const connectionInstance = await mongoose.connect(`${url}`);
+        const connectionInstance = await mongoose.connect(`${config.MONGO_URL}`);
         //console.log(connectionInstance)
         console.log(`connected with database !! DB HOST:${connectionInstance.connection.host}`);
     }catch(error){
@@ -13,4 +13,4 @@ const connectToMoongoose = async() => {
     }
 }
 
-module.exports = connectToMoongoose;
+export { connectToMoongoose };
