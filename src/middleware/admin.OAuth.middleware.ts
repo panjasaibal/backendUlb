@@ -68,7 +68,7 @@ export const attachOAuthStates = (flow:"signup"|"signin")=>(req:Request, res:Res
         callbackUrl
     };
 
-    (req as any).oAuthState = JSON.stringify(state);
+    req.oAuthState = JSON.stringify(state);
     next()
 }
 
@@ -81,7 +81,7 @@ export const parseOAuthState = (req:Request, res:Response, next:NextFunction)=>{
 
         const parsed = JSON.parse(rawState);
 
-        (req as any).oAuthState = parsed;
+        req.oAuthState = parsed;
         next();
     }catch(e){
         next()

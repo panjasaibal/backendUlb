@@ -61,7 +61,7 @@ export const attachOAuthStates =
       callbackUrl,
     };
 
-    (req as any).superadmin_oAuthState = JSON.stringify(state);
+    req.superadmin_oAuthState = JSON.stringify(state);
     next();
   };
 
@@ -77,7 +77,7 @@ export const parseOAuthState = (
 
     const parsed = JSON.parse(rawState);
 
-    (req as any).superadmin_oAuthState = parsed;
+    req.superadmin_oAuthState = parsed;
     next();
   } catch (e) {
     next();

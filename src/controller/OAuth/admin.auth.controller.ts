@@ -14,21 +14,14 @@ interface GoogleProfile {
 interface OAuthState {
   flow?: "signup" | "signin";
   superadmin?: string;
+  callbackUrl?: string;
 }
 export const oauthCallback = async (req: Request, res: Response) => {
   const profile = req.user as GoogleProfile | undefined;
-  const rawState =
-    typeof req.query.state === "string" ? req.query.state : profile?.oauthState;
-
-  let state: OAuthState = {};
-
-  if (rawState) {
-    try {
-      state = JSON.parse(rawState) as OAuthState;
-    } catch {
-      return res.status(400).json({ message: "Invalid OAuth state" });
-    }
-  }
+  const state =
+    typeof req.oAuthState === "object" && req.oAuthState !== null
+      ? (req.oAuthState as OAuthState)
+      : {};
 
   let admin: IAdmin | null = null;
   const email = profile?.emails?.[0]?.value;

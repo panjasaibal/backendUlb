@@ -15,8 +15,10 @@ router.get(
   (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate("google", {
       scope: ["profile", "email"],
-
-      state: (req as any).superadmin_oAuthState,
+      state:
+        typeof req.superadmin_oAuthState === "string"
+          ? req.superadmin_oAuthState
+          : undefined,
     } as AuthenticateOptions)(req, res, next);
   },
 );

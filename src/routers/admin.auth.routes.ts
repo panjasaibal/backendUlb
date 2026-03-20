@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response, Router } from "express";
 import { passport } from "@admin/passport";
 import { oauthCallback } from "@admin/controller/OAuth/admin.auth.controller";
-import { config } from "@admin/config";
 import { attachOAuthStates, parseOAuthState } from "@admin/middleware/admin.OAuth.middleware";
 import { AuthenticateOptions } from "passport";
 
@@ -57,7 +56,7 @@ router.get(
   (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate("google", {
       scope: ["profile", "email"],
-      state: (req as any).oAuthState,
+      state: typeof req.oAuthState === "string" ? req.oAuthState : undefined,
     })(req, res, next);
   },
 );
@@ -68,8 +67,8 @@ router.get(
   (req: Request, res: Response, next: NextFunction) => {
     passport.authenticate("google", {
       scope: ["profile", "email"],
-      state: (req as any).oAuthState,
-    }as AuthenticateOptions)(req, res, next);
+      state: typeof req.oAuthState === "string" ? req.oAuthState : undefined,
+    } as AuthenticateOptions)(req, res, next);
   },
 );
 

@@ -5,22 +5,34 @@ import { createSuperAdmin } from "@admin/services/superAdmin.service";
 import { signAccessToken, signRefreshToken } from "@admin/util/jwt_manage";
 import { ISuperAdmin } from "@panjasaibal/backend_ulb_shared";
 
+interface OAuthStateSuperAdmin{
+  flow?: "signup" | "signin";
+  callbackUrl?: string;
+}
+
+
 export const oauthCallback = async (req: Request, res: Response) => {
   const profile = req.user as { emails?: Array<{ value: string }>; displayName?: string } | undefined;
 
-  let flow: string | undefined;
+  // let flow: string | undefined;
 
-  if (typeof req.query.state === "string") {
-    try {
-      const parsed = JSON.parse(req.query.state) as { flow?: string };
-      flow = parsed.flow;
-    } catch {
-      return res.status(400).json({ message: "Invalid OAuth state" });
-    }
-  }
+  // if (typeof req.query.state === "string") {
+  //   try {
+  //     const parsed = JSON.parse(req.query.state) as { flow?: string };
+  //     flow = parsed.flow;
+  //   } catch {
+  //     return res.status(400).json({ message: "Invalid OAuth state" });
+  //   }
+  // }
+
+  const state =
+    typeof req.superadmin_oAuthState === "object" &&
+    req.superadmin_oAuthState !== null
+      ? (req.superadmin_oAuthState as OAuthStateSuperAdmin)
+      : {};
 
   
-  if (flow === "signup") {
+  if (state.flow === "signup") {
     const superAdmin:ISuperAdmin = await createSuperAdmin(profile);
     const superAdminId:string = String(superAdmin._id);
     const username:string = String(superAdmin.username);
