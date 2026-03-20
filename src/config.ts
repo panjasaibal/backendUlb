@@ -18,6 +18,7 @@ class Config {
   public CLOUD_API_SECRET: string | undefined;
   public GOOGLE_CLIENT_SECRET: string | undefined;
   public GOOGLE_CLIENT_ID: string | undefined;
+  public GOOGLE_ALLOWED_CALLBACK_URLS: string | undefined;
   public GATEWAY_JWT_TOKEN: string | undefined;
   public API_GATEWAY_URL: string | undefined;
   public ELASTIC_SEARCH_URL: string | undefined;
@@ -37,6 +38,7 @@ class Config {
     this.CLOUD_API_SECRET = process.env.CLOUD_API_SECRET || '';
     this.GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || '';
     this.GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || '';
+    this.GOOGLE_ALLOWED_CALLBACK_URLS = process.env.GOOGLE_ALLOWED_CALLBACK_URLS || '';
     this.GATEWAY_JWT_TOKEN = process.env.GATEWAY_JWT_TOKEN || '';
     this.API_GATEWAY_URL = process.env.API_GATEWAY_URL || '';
     this.ELASTIC_SEARCH_URL = process.env.ELASTIC_SEARCH_URL || '';

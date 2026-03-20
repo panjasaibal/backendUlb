@@ -1,6 +1,6 @@
 import { Application } from "express";
 import http from 'http';
-const PORT = 3000;
+const PORT = 5000;
 
 
 export function startServer(app: Application): http.Server {

@@ -1,15 +1,28 @@
 import mongoose from "mongoose";
 
-const AdminsSchema = new mongoose.Schema({
-  superadmin:{type:mongoose.Schema.Types.ObjectId, ref:'superadmin',required:true},
-  name: {type:String, required:true}, // String is shorthand for {type: String}
-  email: {type:String, required:true, unique:true},
-  role: { type: String, default: "ADMIN" },
-  subscription: { type: String, default: "FREE" },
-  timestamp: { type: Date, default: Date.now},
-});
+const AdminsSchema = new mongoose.Schema(
+  {
+    superadmin: { type: mongoose.Schema.Types.ObjectId, ref: "superadmin", required: true },
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    phoneNumber: { type: String, unique: true, sparse: true },
+    access: { type: Boolean, default: false },
+    profileComplete: { type: Boolean, default: false },
+    role: { type: String, enum: ["ADMIN", "SUPERADMIN"], default: "ADMIN" },
+    status: {
+      type: String,
+      enum: ["PENDING", "ACTIVE"],
+      default: "PENDING"
+    },
+    subscription: { type: String, default: "FREE" },
+    timestamp: { type: Date, default: Date.now }
+  },
+  {
+    timestamps: true
+  }
+);
 
-const Adminstration = mongoose.model('adminstration', AdminsSchema);
+const Adminstration = mongoose.model("adminstration", AdminsSchema);
 Adminstration.createIndexes();
 
 
