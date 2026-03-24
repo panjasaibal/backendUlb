@@ -5,6 +5,10 @@ import { IAdmin } from "@panjasaibal/backend_ulb_shared";
 import { createAdmin, getAdminByEmail } from "@admin/services/admin.oauth.services";
 import { signAccessToken, signRefreshToken } from "@admin/util/jwt_manage";
 
+type AdminOAuthRequest = Request & {
+  oAuthState?: string | Record<string, unknown>;
+};
+
 interface GoogleProfile {
   emails?: Array<{ value: string }>;
   displayName?: string;
@@ -16,7 +20,7 @@ interface OAuthState {
   superadmin?: string;
   callbackUrl?: string;
 }
-export const oauthCallback = async (req: Request, res: Response) => {
+export const oauthCallback = async (req: AdminOAuthRequest, res: Response) => {
   const profile = req.user as GoogleProfile | undefined;
   const state =
     typeof req.oAuthState === "object" && req.oAuthState !== null

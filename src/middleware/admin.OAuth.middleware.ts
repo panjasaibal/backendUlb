@@ -1,6 +1,11 @@
 import { config } from "@admin/config";
 import { NextFunction, Request, Response } from "express";
 
+
+type AdminOAuthRequest = Request & {
+  oAuthState?: string | Record<string, unknown>;
+};
+
 const DEFAULT_CALLBACK_PATH = "/auth/admin/google/callback";
 
 const allowedCallbacks = new Set(
@@ -48,7 +53,7 @@ const buildState = (
 });
 
 
-export const attachOAuthStates = (flow:"signup"|"signin")=>(req:Request, res:Response, next:NextFunction)=>{
+export const attachOAuthStates = (flow:"signup"|"signin")=>(req:AdminOAuthRequest, res:Response, next:NextFunction)=>{
     const callbackUrl = getCallbackUrl(req);
     const superadmin =
       typeof req.query.superadmin === "string"
@@ -73,7 +78,7 @@ export const attachOAuthStates = (flow:"signup"|"signin")=>(req:Request, res:Res
 }
 
 
-export const parseOAuthState = (req:Request, res:Response, next:NextFunction)=>{
+export const parseOAuthState = (req:AdminOAuthRequest, res:Response, next:NextFunction)=>{
     try{
         const rawState = req.query.state;
 

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 
 import setAuthCookies  from "@admin/cookie";
-import { createSuperAdmin } from "@admin/services/superAdmin.service";
+import { createSuperAdmin, findSuperAdminByEmail } from "@admin/services/superAdmin.service";
 import { signAccessToken, signRefreshToken } from "@admin/util/jwt_manage";
 import { ISuperAdmin } from "@panjasaibal/backend_ulb_shared";
 
@@ -10,20 +10,14 @@ interface OAuthStateSuperAdmin{
   callbackUrl?: string;
 }
 
+type SuperAdminOAuthRequest = Request & {
+  superadmin_oAuthState?: string | Record<string, unknown>;
+};
 
-export const oauthCallback = async (req: Request, res: Response) => {
+
+
+export const oauthCallback = async (req: SuperAdminOAuthRequest, res: Response) => {
   const profile = req.user as { emails?: Array<{ value: string }>; displayName?: string } | undefined;
-
-  // let flow: string | undefined;
-
-  // if (typeof req.query.state === "string") {
-  //   try {
-  //     const parsed = JSON.parse(req.query.state) as { flow?: string };
-  //     flow = parsed.flow;
-  //   } catch {
-  //     return res.status(400).json({ message: "Invalid OAuth state" });
-  //   }
-  // }
 
   const state =
     typeof req.superadmin_oAuthState === "object" &&
@@ -54,6 +48,24 @@ export const oauthCallback = async (req: Request, res: Response) => {
 
     setAuthCookies(res, accessToken, refreshToken);
 
+    return res.redirect("http://localhost:3000/dashboard");
+  }
+  else if(state.flow === "signin"){
+    const superAdmin = await findSuperAdminByEmail(profile!.emails![0].value);
+    const accessToken = signAccessToken(
+      superAdmin._id!,
+      superAdmin.username,
+      superAdmin.email,
+      superAdmin.role!
+    );
+    const refreshToken = signRefreshToken(
+      superAdmin._id!,
+      superAdmin.username,
+      superAdmin.email,
+      superAdmin.role!
+    );
+
+    setAuthCookies(res, accessToken, refreshToken);
     return res.redirect("http://localhost:3000/dashboard");
   }
 

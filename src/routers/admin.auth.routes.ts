@@ -4,69 +4,37 @@ import { oauthCallback } from "@admin/controller/OAuth/admin.auth.controller";
 import { attachOAuthStates, parseOAuthState } from "@admin/middleware/admin.OAuth.middleware";
 import { AuthenticateOptions } from "passport";
 
+type AdminOAuthRequest = Request & {
+  oAuthState?: string | Record<string, unknown>;
+};
+
+type GoogleAuthenticateOptions = AuthenticateOptions & {
+  callbackURL?: string;
+};
+
+const ADMIN_GOOGLE_CALLBACK_URL = "/auth/admin/google/callback";
+
 const router = Router();
-// const DEFAULT_CALLBACK_PATH = "/auth/admin/google/callback";
-// const allowedCallbacks = new Set(
-//   (config.GOOGLE_ALLOWED_CALLBACK_URLS || "")
-//     .split(",")
-//     .map((url) => url.trim())
-//     .filter(Boolean)
-// );
-
-// const getCallbackUrl = (req: Request): string => {
-//   const callbackUrl =
-//     typeof req.query.callbackUrl === "string" ? req.query.callbackUrl.trim() : "";
-
-//   if (!callbackUrl || callbackUrl === DEFAULT_CALLBACK_PATH) {
-//     return DEFAULT_CALLBACK_PATH;
-//   }
-
-//   return allowedCallbacks.has(callbackUrl) ? callbackUrl : DEFAULT_CALLBACK_PATH;
-// };
-
-// const getCallbackUrlFromState = (state: unknown): string => {
-//   if (typeof state !== "string") {
-//     return DEFAULT_CALLBACK_PATH;
-//   }
-
-//   try {
-//     const parsed = JSON.parse(state) as { callbackUrl?: string };
-//     return parsed.callbackUrl && allowedCallbacks.has(parsed.callbackUrl)
-//       ? parsed.callbackUrl
-//       : DEFAULT_CALLBACK_PATH;
-//   } catch {
-//     return DEFAULT_CALLBACK_PATH;
-//   }
-// };
-
-// const buildState = (
-//   flow: "signup" | "signin",
-//   superadmin?: string,
-//   callbackUrl?: string
-// ) =>
-//   JSON.stringify({
-//     flow,
-//     ...(superadmin ? { superadmin } : {}),
-//     ...(callbackUrl ? { callbackUrl } : {})
-//   });
 
 router.get(
   "/google/signup",
   attachOAuthStates("signup"),
-  (req: Request, res: Response, next: NextFunction) => {
+  (req: AdminOAuthRequest, res: Response, next: NextFunction) => {
     passport.authenticate("google", {
       scope: ["profile", "email"],
+      callbackURL: ADMIN_GOOGLE_CALLBACK_URL,
       state: typeof req.oAuthState === "string" ? req.oAuthState : undefined,
-    })(req, res, next);
+    } as AuthenticateOptions)(req, res, next);
   },
 );
 
 router.get(
   "/google/signin",
   attachOAuthStates("signin"),
-  (req: Request, res: Response, next: NextFunction) => {
+  (req: AdminOAuthRequest, res: Response, next: NextFunction) => {
     passport.authenticate("google", {
       scope: ["profile", "email"],
+      callbackURL: ADMIN_GOOGLE_CALLBACK_URL,
       state: typeof req.oAuthState === "string" ? req.oAuthState : undefined,
     } as AuthenticateOptions)(req, res, next);
   },
@@ -76,8 +44,9 @@ router.get(
   "/google/callback",
   parseOAuthState,
   passport.authenticate("google",{
-    session: false
-  }),
+    session: false,
+    callbackURL: ADMIN_GOOGLE_CALLBACK_URL
+  } as GoogleAuthenticateOptions),
   oauthCallback
 );
 

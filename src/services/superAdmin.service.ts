@@ -1,5 +1,5 @@
 import { SuperAdmin } from "@admin/model/superadmin.model";
-import { BadRequestError, ISuperAdmin } from "@panjasaibal/backend_ulb_shared";
+import { BadRequestError, ISuperAdmin, NotFoundError } from "@panjasaibal/backend_ulb_shared";
 
 async function createSuperAdmin(profile: { emails?: Array<{ value: string }>; displayName?: string }|undefined): Promise<ISuperAdmin> {
     const email = profile!.emails![0].value;
@@ -21,9 +21,22 @@ async function createSuperAdmin(profile: { emails?: Array<{ value: string }>; di
     } as ISuperAdmin;
 }
 
+async function findSuperAdminByEmail(email:string):Promise<ISuperAdmin> {
+    const superAdmin = await SuperAdmin.findOne({email});
+    if(!superAdmin) throw new NotFoundError("Unauthorized","superadmin.service findSuperAdminByEmail() method");
+    return {
+        _id:superAdmin._id.toString(),
+        email:superAdmin.email,
+        username:superAdmin.username,
+        createdAt:superAdmin.createdAt,
+        updatedAt:superAdmin.updatedAt
+    };
+
+}
 
 
 
 
 
-export { createSuperAdmin };
+
+export { createSuperAdmin, findSuperAdminByEmail };

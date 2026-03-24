@@ -1,6 +1,10 @@
 import { config } from "@admin/config";
 import { NextFunction, Request, Response } from "express";
 
+type SuperAdminOAuthRequest = Request & {
+  superadmin_oAuthState?: string | Record<string, unknown>;
+};
+
 const DEFAULT_CALLBACK_PATH = "/auth/superadmin/google/callback";
 
 const allowedCallbacks = new Set(
@@ -25,35 +29,10 @@ const getCallbackUrl = (req: Request): string => {
     : DEFAULT_CALLBACK_PATH;
 };
 
-const getCallbackUrlFromState = (state: unknown): string => {
-  if (typeof state !== "string") {
-    return DEFAULT_CALLBACK_PATH;
-  }
-
-  try {
-    const parsed = JSON.parse(state) as { callbackUrl?: string };
-    return parsed.callbackUrl && allowedCallbacks.has(parsed.callbackUrl)
-      ? parsed.callbackUrl
-      : DEFAULT_CALLBACK_PATH;
-  } catch {
-    return DEFAULT_CALLBACK_PATH;
-  }
-};
-
-const buildState = (
-  flow: "signup" | "signin",
-  superadmin?: string,
-  callbackUrl?: string,
-) =>
-  JSON.stringify({
-    flow,
-    ...(superadmin ? { superadmin } : {}),
-    ...(callbackUrl ? { callbackUrl } : {}),
-  });
 
 export const attachOAuthStates =
   (flow: "signup" | "signin") =>
-  (req: Request, res: Response, next: NextFunction) => {
+  (req: SuperAdminOAuthRequest, res: Response, next: NextFunction) => {
     const callbackUrl = getCallbackUrl(req);
 
     const state: any = {
@@ -66,7 +45,7 @@ export const attachOAuthStates =
   };
 
 export const parseOAuthState = (
-  req: Request,
+  req: SuperAdminOAuthRequest,
   res: Response,
   next: NextFunction,
 ) => {
