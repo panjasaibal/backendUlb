@@ -6,6 +6,8 @@ import {
   attachOAuthStates,
   parseOAuthState,
 } from "@admin/middleware/superadmin.oAuth.middleware";
+import { authenticateUser } from "@admin/middleware/auth.middleware";
+import { inviteAdmin } from "@admin/controller/OAuth/admin.auth.controller";
 
 type SuperAdminOAuthRequest = Request & {
   superadmin_oAuthState?: string | Record<string, unknown>;
@@ -20,7 +22,7 @@ const SUPERADMIN_GOOGLE_CALLBACK_URL = "/auth/superadmin/google/callback";
 const router = Router();
 
 router.get(
-  "/google/signup",
+  "/auth/superadmin/google/signup",
   attachOAuthStates("signup"),
   (req: SuperAdminOAuthRequest, res: Response, next: NextFunction) => {
     passport.authenticate("google", {
@@ -35,7 +37,7 @@ router.get(
 );
 
 router.get(
-  "/google/callback",
+  "/auth/superadmin/google/callback",
   parseOAuthState,
   passport.authenticate("google", {
     session: false,
@@ -43,5 +45,7 @@ router.get(
   } as GoogleAuthenticateOptions),
   oauthCallback,
 );
+
+router.post('/auth/admin/invite', authenticateUser,inviteAdmin)
 
 export const superAdminAuthRoutes = () => router;

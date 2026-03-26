@@ -18,7 +18,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@panjasaibal/backend_ulb_shared": "^1.1.9",
+    "@panjasaibal/backend_ulb_shared": "^1.2.0",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.2.0",
     "compression": "^1.8.1",
