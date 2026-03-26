@@ -1,0 +1,62 @@
+import { config } from "@admin/config";
+import { findAdminById } from "@admin/services/admin.oauth.services";
+import { findSuperAdminById } from "@admin/services/superAdmin.service";
+import { SessionTimeoutError } from "@panjasaibal/backend_ulb_shared";
+import { NextFunction, Request, RequestHandler, Response } from "express";
+import jwt, { TokenExpiredError } from 'jsonwebtoken';
+
+interface UserDecoded extends jwt.JwtPayload{
+    id:string;
+    username: string;
+    email: string;
+    role: "ADMIN"|"SUPERADMIN";
+}
+
+
+
+export const authenticateUser: RequestHandler = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+    try{
+        const accessToken = req.cookies.accessToken;
+
+        if (!accessToken) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const decoded = jwt.verify(accessToken, config.JWT_TOKEN!) as UserDecoded;
+        const {role, id} = decoded;
+
+        switch (role){
+          case "SUPERADMIN": {
+            const superadmin = await findSuperAdminById(id);
+            req.user = {
+              _id: superadmin._id,
+              role: "SUPERADMIN",
+            };
+            return next();
+          }
+
+          case "ADMIN": {
+            const admin = await findAdminById(id);
+            req.user = {
+              _id: admin._id,
+              role: "ADMIN",
+              superAdminId: admin.superadmin,
+            };
+            return next();
+          }
+
+          default:
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+    }catch(e){
+        if(e instanceof TokenExpiredError){
+          return next(new SessionTimeoutError("session timed out", "auth middleware authecticateUser() method", "token_expire_error"));
+        }
+        return next(e);
+    }
+};
