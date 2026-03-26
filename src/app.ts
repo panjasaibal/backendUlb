@@ -1,4 +1,4 @@
-import express, { Application, Express, json } from "express";
+import express, { Application, Express, json,Request, Response, NextFunction } from "express";
 import hpp from "hpp";
 import cors from "cors";
 import helmet from "helmet";
@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import compression from "compression";
 import { appRoutes } from "@admin/route";
 import { passport } from "./passport";
+import { CustomError, IErrorResponse } from "@panjasaibal/backend_ulb_shared";
 
 
 export function createApp():Application{
@@ -59,6 +60,20 @@ function routeMiddleware(app: Application): void {
 
 
 function errorLogger(app: Application) {
-  app.use(errorLogger);
+  app.use('*', (req: Request, res: Response, next: NextFunction) => {
+      const fullUrl = `${req.protocol}://${req.get('host')}${req.originalUrl}`;
+      //log.log('error', `${fullUrl} endpoint does not exist.`, '');
+      console.error(`${fullUrl} endpoint does not exist.`);
+      res.status(404).json({ message: 'The endpoint called does not exist.'});
+      next();
+    });
+
+  app.use((error: IErrorResponse, _req: Request, res: Response, next: NextFunction) => {
+      if (error instanceof CustomError) {
+        //log.log('error', `GatewayService ${error.comingFrom}:`, error);
+        res.status(error.statusCode).json(error.serializeErrors());
+      }
+      next();
+    });
 }
 
