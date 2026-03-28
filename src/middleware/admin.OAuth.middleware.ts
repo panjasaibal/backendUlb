@@ -1,7 +1,6 @@
 import { config } from "@admin/config";
 import { NextFunction, Request, Response } from "express";
 
-
 type AdminOAuthRequest = Request & {
   oAuthState?: string | Record<string, unknown>;
 };
@@ -12,18 +11,22 @@ const allowedCallbacks = new Set(
   (config.GOOGLE_ALLOWED_CALLBACK_URLS || "")
     .split(",")
     .map((url) => url.trim())
-    .filter(Boolean)
+    .filter(Boolean),
 );
 
 const getCallbackUrl = (req: Request): string => {
   const callbackUrl =
-    typeof req.query.callbackUrl === "string" ? req.query.callbackUrl.trim() : "";
+    typeof req.query.callbackUrl === "string"
+      ? req.query.callbackUrl.trim()
+      : "";
 
   if (!callbackUrl || callbackUrl === DEFAULT_CALLBACK_PATH) {
     return DEFAULT_CALLBACK_PATH;
   }
 
-  return allowedCallbacks.has(callbackUrl) ? callbackUrl : DEFAULT_CALLBACK_PATH;
+  return allowedCallbacks.has(callbackUrl)
+    ? callbackUrl
+    : DEFAULT_CALLBACK_PATH;
 };
 
 const getCallbackUrlFromState = (state: unknown): string => {
@@ -44,51 +47,60 @@ const getCallbackUrlFromState = (state: unknown): string => {
 const buildState = (
   flow: "signup" | "signin",
   superadmin?: string,
-  callbackUrl?: string
+  callbackUrl?: string,
 ) =>
   JSON.stringify({
     flow,
     ...(superadmin ? { superadmin } : {}),
-    ...(callbackUrl ? { callbackUrl } : {})
-});
+    ...(callbackUrl ? { callbackUrl } : {}),
+  });
 
-
-export const attachOAuthStates = (flow:"signup"|"signin")=>(req:AdminOAuthRequest, res:Response, next:NextFunction)=>{
+export const attachOAuthStates =
+  (flow: "invite" | "signin") =>
+  (req: AdminOAuthRequest, res: Response, next: NextFunction) => {
     const callbackUrl = getCallbackUrl(req);
     const superadmin =
       typeof req.query.superadmin === "string"
         ? req.query.superadmin
         : undefined;
 
-    if (flow === "signup" && !superadmin) {
+    if (flow === "invite" && !superadmin) {
       return res.status(400).json({
-        message: "superadmin is required for admin signup"
+        message: "superadmin is required for admin invite",
       });
     }
-    const state:any = {
-        flow,
-        ...(flow === 'signup' && typeof req.query.superadmin === "string" &&{
-            superadmin: req.query.superadmin
+    const state: any = {
+      flow,
+      inviteToken:
+        typeof req.query.inviteToken === "string"
+          ? req.query.inviteToken
+          : undefined,
+      ...(flow === "invite" &&
+        typeof req.query.superadmin === "string" && {
+          superadmin: req.query.superadmin,
         }),
-        callbackUrl
+      callbackUrl,
     };
 
     req.oAuthState = JSON.stringify(state);
-    next()
-}
+    next();
+  };
 
+export const parseOAuthState = (
+  req: AdminOAuthRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const rawState = req.query.state;
 
-export const parseOAuthState = (req:AdminOAuthRequest, res:Response, next:NextFunction)=>{
-    try{
-        const rawState = req.query.state;
+    if (typeof rawState !== "string") return next();
 
-        if(typeof rawState !== "string") return next();
+    const parsed = JSON.parse(rawState);
 
-        const parsed = JSON.parse(rawState);
-
-        req.oAuthState = parsed;
-        next();
-    }catch(e){
-        next()
-    }
-}
+    req.oAuthState = parsed;
+    next();
+  } catch (e) {
+    next();
+  }
+};

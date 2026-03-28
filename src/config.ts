@@ -23,6 +23,10 @@ class Config {
   public API_GATEWAY_URL: string | undefined;
   public ELASTIC_SEARCH_URL: string | undefined;
   public CLUSTER_TYPE: string | undefined;
+  public INVITE_SECRET: string | undefined;
+  public SENDER_EMAIL: string | undefined;
+  public SENDER_EMAIL_PASSWORD: string | undefined;
+  public HOST_EMAIL: string | undefined;
 
   constructor() {
     this.DATABASE_HOST = process.env.DATABASE_HOST || '';
@@ -43,6 +47,10 @@ class Config {
     this.API_GATEWAY_URL = process.env.API_GATEWAY_URL || '';
     this.ELASTIC_SEARCH_URL = process.env.ELASTIC_SEARCH_URL || '';
     this.CLUSTER_TYPE = process.env.CLUSTER_TYPE || '';
+    this.INVITE_SECRET = process.env.INVITE_SECRET || '';
+    this.SENDER_EMAIL = process.env.SENDER_EMAIL || '';
+    this.SENDER_EMAIL_PASSWORD = process.env.SENDER_EMAIL_PASSWORD || '';
+    this.HOST_EMAIL = process.env.HOST_EMAIL || '';
   }
   public configCloudinary():void {
      cloudinary.v2.config({
