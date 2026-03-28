@@ -3,6 +3,8 @@ import { passport } from "@admin/passport";
 import { oauthCallback } from "@admin/controller/OAuth/admin.auth.controller";
 import { attachOAuthStates, parseOAuthState } from "@admin/middleware/admin.OAuth.middleware";
 import { AuthenticateOptions } from "passport";
+import { getAllWorker, getWorker } from "@admin/controller/admin/get";
+import { fetchUser } from "@admin/middleware/user.middleware";
 
 type AdminOAuthRequest = Request & {
   oAuthState?: string | Record<string, unknown>;
@@ -49,5 +51,12 @@ router.get(
   } as GoogleAuthenticateOptions),
   oauthCallback
 );
+
+//protected routes
+
+router.get("/admin/getAllWorker",fetchUser, getAllWorker);
+router.get("/admin/getWorker", fetchUser, getWorker);
+
+
 
 export const adminAuthRoutes = () => router;

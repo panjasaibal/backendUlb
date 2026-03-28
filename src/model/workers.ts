@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 const WorkersSchema = new Schema({
@@ -8,11 +8,12 @@ const WorkersSchema = new Schema({
   phone: {type:String, required:true, unique:true},
   address: {type:String, default:null},
   adhar:{type:String, default:null},
-  timestamp: { type: Date, default: Date.now },
+  createdAt:{type: Date, default: Date.now},
+  updatedAt:{type: Date, default: Date.now},
 }, {
   timestamps: true
 });
 
 const Worker = mongoose.model('workers', WorkersSchema);
 Worker.createIndexes();
-module.exports = Worker;
+export { Worker };
