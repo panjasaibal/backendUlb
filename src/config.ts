@@ -27,6 +27,7 @@ class Config {
   public SENDER_EMAIL: string | undefined;
   public SENDER_EMAIL_PASSWORD: string | undefined;
   public HOST_EMAIL: string | undefined;
+  public REDIS_URL: string| undefined;
 
   constructor() {
     this.DATABASE_HOST = process.env.DATABASE_HOST || '';
@@ -51,6 +52,7 @@ class Config {
     this.SENDER_EMAIL = process.env.SENDER_EMAIL || '';
     this.SENDER_EMAIL_PASSWORD = process.env.SENDER_EMAIL_PASSWORD || '';
     this.HOST_EMAIL = process.env.HOST_EMAIL || '';
+    this.REDIS_URL = process.env.REDIS_URL || '';
   }
   public configCloudinary():void {
      cloudinary.v2.config({
