@@ -6,15 +6,13 @@
     "allowSyntheticDefaultImports": true,
     "importHelpers": true,
     "lib": ["dom", "ES2015"],
-    "module": "commonjs",
-    "moduleResolution": "node",
-    // "ignoreDeprecations": "6.0",
+    "module": "Node16",
+    "moduleResolution": "Node16",
     "noEmitOnError": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitAny": true,
     "esModuleInterop": true,
-    "baseUrl": ".",
     "outDir": "./build",
     "rootDir": ".",
     "sourceMap": true,
@@ -30,9 +28,12 @@
       { "transform": "typescript-transform-paths", "afterDeclarations": true }
     ],
     "paths": {
-      "@admin/*": ["src/*"]
+      "@admin/*": ["./src/*"]
     }
   },
   "include": ["src"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "ts-node": {
+    "files": true
+  }
 }
