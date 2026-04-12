@@ -33,6 +33,7 @@ export const authenticateUser: RequestHandler = async (
           case "SUPERADMIN": {
             const superadmin = await findSuperAdminById(id);
             req.user = {
+              id: superadmin._id,
               _id: superadmin._id,
               role: "SUPERADMIN",
             };
@@ -41,10 +42,13 @@ export const authenticateUser: RequestHandler = async (
 
           case "ADMIN": {
             const admin = await findAdminById(id);
+            if (String(admin.status) === "REVOKED") {
+              return res.status(403).json({ message: "Admin access has been revoked" });
+            }
             req.user = {
+              id: admin._id,
               _id: admin._id,
               role: "ADMIN",
-              superAdminId: admin.superadmin,
             };
             return next();
           }
@@ -59,4 +63,16 @@ export const authenticateUser: RequestHandler = async (
         }
         return next(e);
     }
+};
+
+export const requireSuperAdmin: RequestHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  if (req.user?.role !== "SUPERADMIN") {
+    return res.status(403).json({ message: "Only superadmins can access this resource" });
+  }
+
+  return next();
 };

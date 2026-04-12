@@ -1,25 +1,23 @@
-import mongoose from "mongoose";
+import type { ISuperAdmin } from "@panjasaibal/backend_ulb_shared";
+import { PrismaModel } from "./prisma.model";
 
-const superAdminSchema = new mongoose.Schema(
-  {
-    username: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: {
-      type: String,
-      required: function (this: { provider?: string }) {
-        return this.provider !== "google";
-      }
-    },
-    provider: { type: String, default: "google" },
-    role: { type: String, enum: ["SUPERADMIN"], default: "SUPERADMIN" },
-    timestamp: { type: Date, default: Date.now }
-  },
-  {
-    timestamps: true
+type SuperAdminProvider = "google" | "credentials";
+type SuperAdminRole = "SUPERADMIN";
+
+class SuperAdmin extends PrismaModel implements ISuperAdmin {
+  _id = "";
+  username = "";
+  email = "";
+  password?: string;
+  provider: SuperAdminProvider = "google";
+  role: SuperAdminRole = "SUPERADMIN";
+  timestamp: Date = new Date();
+  createdAt: Date = new Date();
+  updatedAt: Date = new Date();
+
+  constructor(data: Partial<SuperAdmin> = {}) {
+    super(data as Record<string, unknown>);
   }
-);
+}
 
-const SuperAdmin = mongoose.model("superadmin", superAdminSchema);
-SuperAdmin.createIndexes();
-
-export {SuperAdmin};
+export { SuperAdmin, SuperAdminProvider, SuperAdminRole };

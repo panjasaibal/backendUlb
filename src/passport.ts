@@ -31,7 +31,7 @@ passport.use(
       clientID: config.GOOGLE_CLIENT_ID,
       clientSecret: config.GOOGLE_CLIENT_SECRET,
       // Each auth route overrides this with its role-specific callback URL.
-      callbackURL: "/auth/google/callback",
+      callbackURL: "/api/v1/ulbAdmin/auth/admin/google/callback",
       passReqToCallback: true
     },
     async (req, _accessToken, _refreshToken, profile, done) => {

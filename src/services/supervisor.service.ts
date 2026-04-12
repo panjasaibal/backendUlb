@@ -64,6 +64,24 @@ async function findSupervisorById(
   return toISupervisor(supervisor);
 }
 
+
+async function findAllSupervisorByAdmin(
+  admin_id: string,
+): Promise<Array<ISupervisor>> {
+  
+
+  const allSupervisors = await SuperVisor.find({admin: admin_id});
+  if (!allSupervisors || allSupervisors.length ===0)
+    throw new NotFoundError(
+      "Empty Supervisor list",
+      "supervisor service findAllSupervisorByAdmin() methd",
+    );
+  
+  let supervisors: Array<ISupervisor> = allSupervisors.map((supervisor)=>toISupervisor(supervisor));
+
+  return supervisors;
+}
+
 async function updateSupervisor(
   admin_id: string,
   supervisor_id: string,
@@ -112,4 +130,4 @@ function toISupervisor(supervisor: SupervisorDoc): ISupervisor {
 }
 
 
-export { createSupervisor, findSupervisorById, findSupervisorByAdminAndId, updateSupervisor, removeSupervisor };
+export { createSupervisor, findSupervisorById, findSupervisorByAdminAndId, findAllSupervisorByAdmin, updateSupervisor, removeSupervisor };

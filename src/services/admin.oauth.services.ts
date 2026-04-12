@@ -1,17 +1,17 @@
 import { Adminstration } from "@admin/model/adminstration";
-import { SuperAdmin } from "@admin/model/superadmin.model";
+import { SuperVisor } from "@admin/model/supervisor.model";
+import { Worker } from "@admin/model/workers";
 import {
   BadRequestError,
   IAdmin,
   NotFoundError,
 } from "@panjasaibal/backend_ulb_shared";
 import { isValidObjectId, Types } from "mongoose";
-import jwt from "jsonwebtoken";
-import { config } from "@admin/config";
 
-interface GoogleProfile {
-  emails?: Array<{ value: string }>;
-  displayName?: string;
+interface CreateAdminInput {
+  email: string;
+  name: string;
+  phoneNumber?: string;
 }
 
 type OAuthAdmin = IAdmin & {
@@ -20,38 +20,52 @@ type OAuthAdmin = IAdmin & {
   status?: string | boolean;
   subscription?: unknown;
   phoneNumber?: string;
-  inviteToken?: string;
 };
 
-function toAdminResponse(admin: {
+type AdminDocShape = {
   _id: Types.ObjectId;
-  superadmin?: Types.ObjectId | string;
   phoneNumber?: string;
   profileComplete?: boolean;
   access?: boolean;
   status?: string | boolean;
   subscription?: unknown;
-  inviteToken?: string;
   [key: string]: unknown;
-}): OAuthAdmin {
+};
+
+type AdminSubscriptionStatus = {
+  _id: string;
+  name: string;
+  email: string;
+  access: boolean;
+  status?: string | boolean;
+  subscription?: unknown;
+};
+
+function toAdminResponse(admin: AdminDocShape): OAuthAdmin {
   return {
     ...(admin as Record<string, unknown>),
     _id: admin._id.toString(),
-    superadmin: admin.superadmin?.toString() ?? "",
+    superadmin: "",
     phoneNumber: admin.phoneNumber ?? "",
     profileComplete: Boolean(admin.profileComplete),
-    inviteToken: admin.inviteToken,
+    access: admin.access ?? true,
+    status: admin.status,
+    subscription: admin.subscription,
   } as OAuthAdmin;
 }
 
-export async function createAdmin(admin: IAdmin): Promise<OAuthAdmin> {
-  const { email, name, superadmin } = admin;
-  if (!isValidObjectId(superadmin)) {
+function ensureValidAdminId(id: string) {
+  if (!isValidObjectId(id)) {
     throw new BadRequestError(
-      "Invalid superadmin id",
-      "admin oauth service createAdmin()",
+      "Invalid admin id",
+      "admin oauth service ensureValidAdminId()",
     );
   }
+}
+
+export async function createAdmin(admin: CreateAdminInput): Promise<OAuthAdmin> {
+  const email = admin.email.trim().toLowerCase();
+  const name = admin.name.trim();
 
   const existingAdmin = await Adminstration.findOne({ email });
   if (existingAdmin) {
@@ -61,46 +75,29 @@ export async function createAdmin(admin: IAdmin): Promise<OAuthAdmin> {
     );
   }
 
-  const superAdmin = await SuperAdmin.findById(superadmin);
-  if (!superAdmin) {
-    throw new BadRequestError(
-      "SuperAdmin not found",
-      "admin oauth service createAdmin()",
-    );
-  }
-
-  const token = jwt.sign({ email, superadmin }, config.INVITE_SECRET!, {
-    expiresIn: "1d",
-  });
-
   const newAdmin = await Adminstration.create({
     email,
     name,
-    inviteToken: token,
-    inviteExpires: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    superadmin: new Types.ObjectId(superadmin),
-    status: "PENDING",
+    phoneNumber: admin.phoneNumber ?? "",
+    access: true,
+    status: "ACTIVE",
   });
 
-  const adminObject = newAdmin.toObject();
-
-  return toAdminResponse(adminObject);
+  return toAdminResponse(newAdmin.toObject() as AdminDocShape);
 }
 
-export async function findAdminById(id:string):Promise<IAdmin> {
-    const admin = await Adminstration.findById(id);
-    if(!admin) throw new NotFoundError("admin does not exists!", "admin service findadminById() method");
+export async function findAdminById(id: string): Promise<OAuthAdmin> {
+  ensureValidAdminId(id);
 
-    return {
-        _id:(admin._id).toString(),
-        name: admin.name,
-        superadmin: (admin.superadmin).toString(),
-        role: admin.role,
-        email: admin.email,
-        phoneNumber: admin.phoneNumber|| '',
-        createdAt: admin.createdAt,
-        updatedAt: admin.updatedAt,
-    }
+  const admin = await Adminstration.findById(id);
+  if (!admin) {
+    throw new NotFoundError(
+      "admin does not exists!",
+      "admin service findadminById() method",
+    );
+  }
+
+  return toAdminResponse(admin.toObject() as AdminDocShape);
 }
 
 export async function getAdminByEmail(
@@ -113,69 +110,108 @@ export async function getAdminByEmail(
     return null;
   }
 
-  return toAdminResponse(admin as Parameters<typeof toAdminResponse>[0]);
+  return toAdminResponse(admin as AdminDocShape);
 }
 
-export async function findAdminByToken(token: string): Promise<IAdmin| null> {
-  try {
-    const decoded: any = jwt.verify(token, config.INVITE_SECRET!);
-
-    const admin = await Adminstration.findOne({
-      email: decoded.email,
-      inviteToken: token,
-    });
-    if (!admin)
-      throw new NotFoundError(
-        "Admin does not exists",
-        "admin oauth service findAdminByEmailAndToken() method",
-      );
-    if (admin.superadmin !== decoded.superAdminId)
-      throw new BadRequestError(
-        "Superadmin does not match",
-        "admin oauth service findAdminByEmailAndToken() method",
-      );
-
-    return {
-      superadmin: admin.superadmin?.toString(),
-      name: admin.name,
-      email: admin.email,
-      createdAt: admin.createdAt,
-      updatedAt: admin.updatedAt,
-      phoneNumber: admin.phoneNumber ? admin.phoneNumber : "",
-    } as IAdmin;
-  } catch (error) {
-    return null;
-  }
-}
-
-export async function updateAdmin(email: string, body: any): Promise<IAdmin> {
-  const admin = await Adminstration.findOne({ email });
-  if (!admin)
+export async function updateAdmin(
+  email: string,
+  body: Partial<Pick<OAuthAdmin, "phoneNumber" | "status" | "access">>,
+): Promise<OAuthAdmin> {
+  const normalizedEmail = email.trim().toLowerCase();
+  const admin = await Adminstration.findOne({ email: normalizedEmail });
+  if (!admin) {
     throw new NotFoundError(
       "Admin does not exists",
       "admin oauth service updateAdmin() method",
     );
-  let adminBody = {} as any;
-  if (body.phoneNumber) {
+  }
+
+  const adminBody: Record<string, unknown> = {};
+  if (typeof body.phoneNumber === "string") {
     adminBody.phoneNumber = body.phoneNumber;
   }
-  if (body.status) {
+  if (typeof body.status !== "undefined") {
     adminBody.status = body.status;
+  }
+  if (typeof body.access === "boolean") {
+    adminBody.access = body.access;
   }
 
   adminBody.updatedAt = new Date();
 
   const updatedAdmin = await Adminstration.findOneAndUpdate(
-    { email },
-    { $set: { adminBody } },
+    { email: normalizedEmail },
+    { $set: adminBody },
+    { new: true },
   );
 
+  return toAdminResponse(updatedAdmin!.toObject() as AdminDocShape);
+}
+
+export async function revokeAdminAccessById(
+  id: string,
+): Promise<OAuthAdmin> {
+  ensureValidAdminId(id);
+
+  const updatedAdmin = await Adminstration.findByIdAndUpdate(
+    id,
+    {
+      $set: {
+        access: false,
+        status: "REVOKED",
+        updatedAt: new Date(),
+      },
+    },
+    { new: true },
+  );
+
+  if (!updatedAdmin) {
+    throw new NotFoundError(
+      "Admin does not exists",
+      "admin oauth service revokeAdminAccessById() method",
+    );
+  }
+
+  return toAdminResponse(updatedAdmin.toObject() as AdminDocShape);
+}
+
+export async function deleteAdminById(id: string): Promise<OAuthAdmin> {
+  ensureValidAdminId(id);
+
+  const admin = await Adminstration.findById(id);
+  if (!admin) {
+    throw new NotFoundError(
+      "Admin does not exists",
+      "admin oauth service deleteAdminById() method",
+    );
+  }
+
+  await Worker.deleteMany({ admin: admin._id });
+  await SuperVisor.deleteMany({ admin: admin._id });
+  await Adminstration.findByIdAndDelete(admin._id);
+
+  return toAdminResponse(admin.toObject() as AdminDocShape);
+}
+
+export async function getAdminSubscriptionStatusById(
+  id: string,
+): Promise<AdminSubscriptionStatus> {
+  ensureValidAdminId(id);
+
+  const admin = await Adminstration.findById(id).lean();
+  if (!admin) {
+    throw new NotFoundError(
+      "Admin does not exists",
+      "admin oauth service getAdminSubscriptionStatusById() method",
+    );
+  }
+
   return {
-    superadmin: updatedAdmin!.superadmin?.toString(),
-    name: updatedAdmin!.name,
-    email: updatedAdmin!.email,
-    createdAt: updatedAdmin!.createdAt,
-    updatedAt: updatedAdmin!.updatedAt,
-    phoneNumber: updatedAdmin!.phoneNumber,
-  } as IAdmin;
+    _id: admin._id.toString(),
+    name: String(admin.name),
+    email: String(admin.email),
+    access: Boolean(admin.access ?? true),
+    status: admin.status as string | boolean | undefined,
+    subscription: admin.subscription,
+  };
 }

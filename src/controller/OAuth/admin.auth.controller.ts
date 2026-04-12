@@ -1,15 +1,12 @@
-import { NextFunction, Request, RequestHandler, Response } from "express";
+import { Request, Response } from "express";
 
 import setAuthCookies from "@admin/cookie";
 import { IAdmin } from "@panjasaibal/backend_ulb_shared";
 import {
   createAdmin,
-  findAdminByToken,
   getAdminByEmail,
-  updateAdmin,
 } from "@admin/services/admin.oauth.services";
 import { signAccessToken, signRefreshToken } from "@admin/util/jwt_manage";
-import { sendInvitationMail } from "@admin/mailer";
 
 type AdminOAuthRequest = Request & {
   oAuthState?: string | Record<string, unknown>;
@@ -22,9 +19,7 @@ interface GoogleProfile {
 }
 
 interface OAuthState {
-  flow?: "invite" | "signin";
-  superadmin?: string;
-  inviteToken?: string;
+  flow?: "signup" | "signin";
   callbackUrl?: string;
 }
 
@@ -33,22 +28,60 @@ export const oauthCallback = async (req: AdminOAuthRequest, res: Response) => {
     typeof req.oAuthState === "object" && req.oAuthState !== null
       ? (req.oAuthState as OAuthState)
       : {};
+  const profile = req.user as GoogleProfile | undefined;
+  const email = profile?.emails?.[0]?.value?.trim().toLowerCase();
+  const fallbackName = email ? email.split("@")[0] : "Admin";
+  const displayName = profile?.displayName?.trim() || fallbackName;
+
+  if (state.flow === "signup") {
+    if (!email) {
+      return res.status(400).json({
+        message: "Google account email is required for admin signup",
+      });
+    }
+
+    const admin = await createAdmin({
+      email,
+      name: displayName,
+    });
+
+    const accessToken = signAccessToken(
+      admin._id!,
+      admin.name,
+      admin.email,
+      admin.role!,
+    );
+    const refreshToken = signRefreshToken(
+      admin._id!,
+      admin.name,
+      admin.email,
+      admin.role!,
+    );
+
+    setAuthCookies(res, accessToken, refreshToken);
+    return res.redirect("http://localhost:3000/dashboard");
+  }
 
   if (state.flow === "signin") {
     let admin: IAdmin | null = null;
-    const inviteToken = req.query.token as string;
-
-    if (inviteToken) {
-      admin = await findAdminByToken(inviteToken);
-      const updatedAdmin = await updateAdmin(admin!.email, {
-        status: "ACTIVE",
+    if (!email) {
+      return res.status(400).json({
+        message: "Google account email is required for admin signin",
       });
-      console.log("updated admin", updatedAdmin);
-    } else {
-      const profile = req.user as GoogleProfile | undefined;
-      admin = await getAdminByEmail(
-        profile?.emails?.[0]?.value?.trim().toLowerCase()!,
-      );
+    }
+
+    admin = await getAdminByEmail(email);
+
+    if (!admin) {
+      return res.status(403).json({
+        message: "Admin account not found for this Google account",
+      });
+    }
+
+    if (String(admin.status) === "REVOKED") {
+      return res.status(403).json({
+        message: "Admin access has been revoked",
+      });
     }
 
     const accessToken = signAccessToken(
@@ -65,38 +98,8 @@ export const oauthCallback = async (req: AdminOAuthRequest, res: Response) => {
     );
 
     setAuthCookies(res, accessToken, refreshToken);
-    res.redirect("http://localhost:3000/dashboard");
-  }
-};
-
-export const inviteAdmin: RequestHandler = async (
-  req: Request,
-  res: Response,
-  _: NextFunction,
-) => {
-  const { email, name } = req.body;
-  const superadmin = req.user?.superAdminId;
-
-  if (!superadmin) {
-    return res.status(403).json({
-      message: "Only superadmins can invite admins",
-    });
+    return res.redirect("http://localhost:3000/dashboard");
   }
 
-  const admin = await createAdmin({
-    name,
-    email,
-    superadmin,
-    phoneNumber: "",
-    updatedAt: new Date(),
-    createdAt: new Date(),
-  });
-  const inviteUrl = `http://localhost:3000/admin/accept-invite?token=${admin.inviteToken}`;
-
-  const mailId = sendInvitationMail(admin.email, admin.name, inviteUrl);
-  console.log("Mail sent to the emailid", mailId);
-  return res.status(201).json({
-    message: "Admin invitation sent successfully",
-    admin,
-  });
+  return res.status(400).json({ message: "Unsupported OAuth flow" });
 };

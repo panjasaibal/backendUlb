@@ -1,19 +1,20 @@
-import mongoose from 'mongoose';
-const { Schema } = mongoose;
+import type { IWorker } from "@panjasaibal/backend_ulb_shared";
+import { PrismaModel } from "./prisma.model";
 
-const WorkersSchema = new Schema({
-  admin:{type:mongoose.Schema.Types.ObjectId, ref:'adminstration',required:true},
-  supervisor:{type:mongoose.Schema.Types.ObjectId, ref:'supervisor', required:true},
-  name: {type:String, required:true}, // String is shorthand for {type: String}
-  phone: {type:String, required:true, unique:true},
-  address: {type:String, default:null},
-  adhar:{type:String, default:null},
-  createdAt:{type: Date, default: Date.now},
-  updatedAt:{type: Date, default: Date.now},
-}, {
-  timestamps: true
-});
+class Worker extends PrismaModel implements IWorker {
+  _id = "";
+  admin = "";
+  supervisor = "";
+  name = "";
+  phone = "";
+  address: string | null = null;
+  adhar: string | null = null;
+  createdAt: Date = new Date();
+  updatedAt: Date = new Date();
 
-const Worker = mongoose.model('workers', WorkersSchema);
-Worker.createIndexes();
+  constructor(data: Partial<Worker> = {}) {
+    super(data as Record<string, unknown>);
+  }
+}
+
 export { Worker };

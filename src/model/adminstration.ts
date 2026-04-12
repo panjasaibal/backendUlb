@@ -1,32 +1,28 @@
-import mongoose from "mongoose";
+import { PrismaModel } from "./prisma.model";
+import type { SubscriptionPlan } from "./subscription";
 
-const AdminsSchema = new mongoose.Schema(
-  {
-    superadmin: { type: mongoose.Schema.Types.ObjectId, ref: "superadmin", required: true },
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    phoneNumber: { type: String, unique: true, sparse: true },
-    access: { type: Boolean, default: false },
-    profileComplete: { type: Boolean, default: false },
-    role: { type: String, enum: ["ADMIN", "SUPERADMIN"], default: "ADMIN" },
-    inviteToken:{type:String, required: true },
-    inviteExpires:{type: Date, required: true},
-    status: {
-      type: String,
-      enum: ["PENDING", "ACTIVE"],
-      default: "PENDING"
-    },
-    subscription: { type: String, default: "FREE" },
-    createdAt:{type:Date, default: Date.now},
-    updatedAt:{type:Date, default: Date.now},
-  },
-  {
-    timestamps: true
+type AdminProvider = "google" | "credentials";
+type AdminRole = "ADMIN" | "SUPERADMIN";
+type AdminStatus = "PENDING" | "ACTIVE" | "REVOKED";
+
+class Adminstration extends PrismaModel {
+  _id = "";
+  name = "";
+  email = "";
+  password?: string;
+  provider: AdminProvider = "google";
+  phoneNumber?: string;
+  access = true;
+  profileComplete = false;
+  role: AdminRole = "ADMIN";
+  status: AdminStatus = "ACTIVE";
+  subscription: SubscriptionPlan = "FREE";
+  createdAt: Date = new Date();
+  updatedAt: Date = new Date();
+
+  constructor(data: Partial<Adminstration> = {}) {
+    super(data as Record<string, unknown>);
   }
-);
+}
 
-const Adminstration = mongoose.model("adminstration", AdminsSchema);
-Adminstration.createIndexes();
-
-
-export {Adminstration};
+export { AdminRole, AdminStatus, AdminProvider, Adminstration };
