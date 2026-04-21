@@ -22,8 +22,7 @@ const fetchUser = async (req: Request, res: Response, next: NextFunction) => {
       default:
         return res.status(401).json({ message: "unauthorized" });
     }
-    if (req.user?.role !== "ADMIN")
-      return res.status(401).json({ message: "unauthorized" });
+  
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "something went wrong" });

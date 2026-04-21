@@ -33,7 +33,6 @@ function setAuthenticatedUser(
 ) {
   req.user = {
     id,
-    _id: id,
     role,
   };
 }
@@ -51,15 +50,15 @@ async function attachSuperAdmin(req: Request, id: string) {
 
 async function attachAdmin(req: Request, id: string) {
   const admin = await findAdminById(id);
-  if (String(admin.status) === "REVOKED") {
+  if (String(admin.status) === "DISABLED") {
     throw new Error(ADMIN_REVOKED_ERROR);
   }
 
-  if (!admin._id) {
+  if (!admin.id) {
     throw new Error(UNAUTHORIZED_ERROR);
   }
 
-  setAuthenticatedUser(req, admin._id, "ADMIN");
+  setAuthenticatedUser(req, admin.id, "ADMIN");
 
   return admin;
 }
@@ -100,7 +99,7 @@ async function issueAccessTokenFromRefresh(
   }
 
   const admin = await attachAdmin(req, refreshDecoded.id);
-  const adminId = admin._id;
+  const adminId = admin.id;
   if (!adminId) {
     throw new Error(UNAUTHORIZED_ERROR);
   }
@@ -109,7 +108,7 @@ async function issueAccessTokenFromRefresh(
     adminId,
     admin.name,
     admin.email,
-    admin.role!,
+    "ADMIN",
     accessTokenExpiresIn,
   );
   setAccessTokenCookie(res, newAccessToken, accessTokenMaxAge);

@@ -4,7 +4,7 @@ import setAuthCookies from "@admin/cookie";
 import { IAdmin } from "@panjasaibal/backend_ulb_shared";
 import {
   createAdmin,
-  getAdminByEmail,
+  findAdminByEmail,
 } from "@admin/services/admin.oauth.services";
 import { signAccessToken, signRefreshToken } from "@admin/util/jwt_manage";
 
@@ -45,32 +45,20 @@ export const oauthCallback = async (req: AdminOAuthRequest, res: Response) => {
       name: displayName,
     });
 
-    const accessToken = signAccessToken(
-      admin._id!,
-      admin.name,
-      admin.email,
-      admin.role!,
-    );
-    const refreshToken = signRefreshToken(
-      admin._id!,
-      admin.name,
-      admin.email,
-      admin.role!,
-    );
 
-    setAuthCookies(res, accessToken, refreshToken);
+    setAuthCookies(res, admin.accessToken, admin.refreshToken);
     return res.redirect("http://localhost:3000/dashboard");
   }
 
   if (state.flow === "signin") {
-    let admin: IAdmin | null = null;
+    
     if (!email) {
       return res.status(400).json({
         message: "Google account email is required for admin signin",
       });
     }
 
-    admin = await getAdminByEmail(email);
+    const admin = await findAdminByEmail(email);
 
     if (!admin) {
       return res.status(403).json({
@@ -78,27 +66,27 @@ export const oauthCallback = async (req: AdminOAuthRequest, res: Response) => {
       });
     }
 
-    if (String(admin.status) === "REVOKED") {
+    if (String(admin.status) === "DISABLED") {
       return res.status(403).json({
         message: "Admin access has been revoked",
       });
     }
 
     const accessToken = signAccessToken(
-      admin!._id!,
-      admin!.name,
-      admin!.email,
-      admin!.role!,
+      admin.id,
+      admin.name,
+      admin.email,
+      "ADMIN",
     );
     const refreshToken = signRefreshToken(
-      admin!._id!,
-      admin!.name,
-      admin!.email,
-      admin!.role!,
+      admin.id,
+      admin.name,
+      admin.email,
+      "ADMIN"
     );
 
     setAuthCookies(res, accessToken, refreshToken);
-    return res.redirect("http://localhost:3000/dashboard");
+    return res.redirect(`http://localhost:3000/dashboard/${admin.id}`);
   }
 
   return res.status(400).json({ message: "Unsupported OAuth flow" });

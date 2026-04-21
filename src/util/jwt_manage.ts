@@ -34,7 +34,7 @@ export function signAccessToken(
   id: string,
   username: string,
   email: string,
-  role: AuthRole,
+  role:AuthRole="ADMIN",
 ): string {
   return signAuthToken(id, username, email, role, "15m");
 }
@@ -43,7 +43,7 @@ export function signCustomAccessToken(
   id: string,
   username: string,
   email: string,
-  role: AuthRole,
+  role:AuthRole="ADMIN",
   expiresIn: SignOptions["expiresIn"],
 ): string {
   return signAuthToken(id, username, email, role, expiresIn);
@@ -53,7 +53,7 @@ export function signRefreshToken(
   id: string,
   username: string,
   email: string,
-  role: AuthRole,
+  role:AuthRole="ADMIN",
 ): string {
   return signAuthToken(id, username, email, role, "7d");
 }
