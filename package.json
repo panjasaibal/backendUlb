@@ -19,6 +19,7 @@
   "license": "ISC",
   "dependencies": {
     "@panjasaibal/backend_ulb_shared": "^1.2.03",
+    "@prisma/client": "^6.19.3",
     "@socket.io/redis-adapter": "^8.3.0",
     "bcrypt": "^6.0.0",
     "cloudinary": "^2.2.0",

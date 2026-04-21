@@ -3,3 +3,4 @@
 errLogger.log
 /public
 .npmrc
+/generated/prisma

@@ -33,6 +33,10 @@ class PrismaModel {
     Object.assign(this, data);
   }
 
+  toJSON(): Record<string, unknown> {
+    return Object.assign({}, this) as Record<string, unknown>;
+  }
+
   protected static unsupportedError(operation: string): Error {
     return new Error(
       `${this.name}.${operation} is not backed by Prisma yet. Update the service layer to use prisma.${this.name} instead.`,

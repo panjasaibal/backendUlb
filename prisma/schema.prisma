@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AdminStatus {
+  PENDING
+  ACTIVE
+  DISABLED
+}
+
+enum SubscriptionPlan {
+  FREE
+  BASIC
+  PREMIUM
+}
+
+enum AdminProvider{
+  google
+  credentials
+}
+
+model SuperAdmin {
+  id           String   @id @default(uuid())
+  username     String
+  email        String   @unique
+  password     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Admin {
+  id              String   @id @default(uuid())
+
+  name            String
+  email           String   @unique
+  password        String
+  provider        AdminProvider @default(google)
+  phoneNumber     String?
+  access          Boolean  @default(true)
+  profileComplete Boolean  @default(false)
+  status          AdminStatus @default(ACTIVE)
+  subscription    SubscriptionPlan @default(FREE)
+
+  supervisors     Supervisor[]
+  workers         Worker[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Supervisor {
+  id        String   @id @default(uuid())
+  adminId   String
+  admin     Admin    @relation(fields: [adminId], references: [id])
+
+  name      String
+  phone     String   @unique
+  address   String?
+  profile   String?
+  aadhar    String?
+  workers   Worker[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([adminId])
+}
+
+model Worker {
+  id           String   @id @default(uuid())
+  adminId      String
+  supervisorId String
+
+  admin        Admin      @relation(fields: [adminId], references: [id])
+  supervisor   Supervisor @relation(fields: [supervisorId], references: [id])
+
+  name         String
+  phone        String   @unique
+  address      String?
+  aadhar       String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([adminId])
+  @@index([supervisorId])
+}
+
+

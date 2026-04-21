@@ -1,28 +1,43 @@
 import { PrismaModel } from "./prisma.model";
 import type { SubscriptionPlan } from "./subscription";
+import type { Supervisor } from "./supervisor.model";
+import type { Worker } from "./workers";
 
 type AdminProvider = "google" | "credentials";
-type AdminRole = "ADMIN" | "SUPERADMIN";
-type AdminStatus = "PENDING" | "ACTIVE" | "REVOKED";
+type AdminStatus = "PENDING" | "ACTIVE" | "DISABLED";
 
-class Adminstration extends PrismaModel {
-  _id = "";
+class Administration extends PrismaModel {
+  id = "";
   name = "";
   email = "";
-  password?: string;
+  password = "";
   provider: AdminProvider = "google";
-  phoneNumber?: string;
+  phoneNumber: string | null = null;
   access = true;
   profileComplete = false;
-  role: AdminRole = "ADMIN";
   status: AdminStatus = "ACTIVE";
   subscription: SubscriptionPlan = "FREE";
   createdAt: Date = new Date();
   updatedAt: Date = new Date();
+  supervisors?: Supervisor[];
+  workers?: Worker[];
 
-  constructor(data: Partial<Adminstration> = {}) {
+  constructor(data: Partial<Administration> = {}) {
     super(data as Record<string, unknown>);
+  }
+
+  get _id(): string {
+    return this.id;
+  }
+
+  get superadmin(): string {
+    return "";
   }
 }
 
-export { AdminRole, AdminStatus, AdminProvider, Adminstration };
+export {
+  AdminStatus,
+  AdminProvider,
+  Administration,
+  Administration as Adminstration,
+};
