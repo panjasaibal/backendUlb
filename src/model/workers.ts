@@ -1,10 +1,8 @@
 import { PrismaModel } from "./prisma.model";
-import type { Administration } from "./adminstration";
 import type { Supervisor } from "./supervisor.model";
 
 class Worker extends PrismaModel {
   id = "";
-  adminId = "";
   supervisorId = "";
   name = "";
   phone = "";
@@ -12,7 +10,6 @@ class Worker extends PrismaModel {
   aadhar: string | null = null;
   createdAt: Date = new Date();
   updatedAt: Date = new Date();
-  adminRelation?: Administration;
   supervisorRelation?: Supervisor;
 
   constructor(data: Partial<Worker> = {}) {
@@ -21,10 +18,6 @@ class Worker extends PrismaModel {
 
   get _id(): string {
     return this.id;
-  }
-
-  get admin(): string {
-    return this.adminId;
   }
 
   get adhar(): string | null {

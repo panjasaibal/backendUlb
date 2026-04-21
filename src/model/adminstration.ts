@@ -10,7 +10,6 @@ class Administration extends PrismaModel {
   id = "";
   name = "";
   email = "";
-  password = "";
   provider: AdminProvider = "google";
   phoneNumber: string | null = null;
   access = true;
@@ -20,7 +19,7 @@ class Administration extends PrismaModel {
   createdAt: Date = new Date();
   updatedAt: Date = new Date();
   supervisors?: Supervisor[];
-  workers?: Worker[];
+  
 
   constructor(data: Partial<Administration> = {}) {
     super(data as Record<string, unknown>);

@@ -44,7 +44,6 @@ model Admin {
 
   name            String
   email           String   @unique
-  password        String
   provider        AdminProvider @default(google)
   phoneNumber     String?
   access          Boolean  @default(true)
@@ -53,7 +52,6 @@ model Admin {
   subscription    SubscriptionPlan @default(FREE)
 
   supervisors     Supervisor[]
-  workers         Worker[]
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -79,22 +77,20 @@ model Supervisor {
 
 model Worker {
   id           String   @id @default(uuid())
-  adminId      String
   supervisorId String
 
-  admin        Admin      @relation(fields: [adminId], references: [id])
   supervisor   Supervisor @relation(fields: [supervisorId], references: [id])
 
   name         String
   phone        String   @unique
-  address      String?
-  aadhar       String?
+  address      String
+  aadhar       String   @unique
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  @@index([adminId])
   @@index([supervisorId])
+  @@index([aadhar])
 }
 
 
