@@ -1,88 +1,73 @@
+import { AdminDto } from "@admin/dto/admin.dto";
 import { prisma } from "@admin/prisma";
 import { signAccessToken, signCustomAccessToken, signRefreshToken, verifyRefreshToken } from "@admin/util/jwt_manage";
 import { BadRequestError, IAdmin, NotAuthorizedError, NotFoundError } from "@panjasaibal/backend_ulb_shared";
+import { AdminStatus, AdminProvider } from "@prisma/client";
 import { SignOptions } from "jsonwebtoken";
-import { Request } from 'express';
 
-
-const DEFAULT_PROVIDER = "google";
-
-interface AdminBody{
-  email:string,
-  name: string
-}
 
 interface RefreshSessionInput {
   refreshToken?: string | null;
   accessTokenExpiresIn?: SignOptions["expiresIn"];
 }
 
-export interface AdminProfile {
+
+interface AdminAuthResult{
+  user: AdminDto,
+  accessToken: string,
+  refreshToken: string
+}
+
+
+function toAdminDto(record: {
   id: string;
   name: string;
   email: string;
-  provider?: string;
-  status?: string;
+  provider: AdminProvider;
   phoneNumber?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface AdminAuthResult {
-  user: AdminProfile;
-  accessToken: string;
-  refreshToken: string;
-}
-
-function toAdminProfile(record: {
-  id: string;
-  name: string;
-  email: string;
-  provider?: string;
-  phoneNumber?: string;
-  access?: boolean;
-  profileComplete?: boolean;
-  status?: string
-  createdAt: Date;
-  updatedAt: Date;
-}): AdminProfile {
+  access: boolean;
+  profileComplete: boolean;
+  status: AdminStatus;
+  createdAt?: Date;
+  updatedAt?: Date;
+}): AdminDto {
   return {
     id: record.id,
     name: record.name,
     email: record.email, 
-    createdAt: record.createdAt,
-    updatedAt: record.updatedAt,
+    createdAt: record.createdAt!,
+    updatedAt: record.updatedAt!,
     phoneNumber: record.phoneNumber?record.phoneNumber: '',
-    status: record.status? record.status: 'ACTIVE',
-    provider: record.provider? record.provider: DEFAULT_PROVIDER
+    status: record.status,
+    provider: record.provider
   };
 }
 
 function buildAuthResult(
-  user: AdminProfile,
+  user: AdminDto,
   accessTokenExpiresIn: SignOptions["expiresIn"] = "15m",
 ): AdminAuthResult {
   return {
     user,
     accessToken:
       accessTokenExpiresIn === "15m"
-        ? signAccessToken(user.id, user.name, user.email)
+        ? signAccessToken(user.id!, user.name, user.email)
         : signCustomAccessToken(
-            user.id,
+            user.id!,
             user.name,
             user.email,
             "ADMIN",
             accessTokenExpiresIn
           ),
     refreshToken: signRefreshToken(
-      user.id,
+      user.id!,
       user.name,
       user.email,
     ),
   };
 }
 
-export async function createAdmin(payload:AdminBody):Promise<AdminAuthResult> {
+export async function createAdmin(payload:AdminDto):Promise<AdminAuthResult> {
   
   const existedAdmin = await prisma.admin.findUnique({
     where:{email: payload.email},
@@ -102,17 +87,18 @@ export async function createAdmin(payload:AdminBody):Promise<AdminAuthResult> {
       id:true,
       name:true,
       email: true,
+      provider: true,
       createdAt: true,
       updatedAt: true
     }
   });
 
-  return buildAuthResult(newAdmin);
+  return buildAuthResult(newAdmin,"1d");
 }
 
 
 
-export async function findAdminById(id: string): Promise<AdminProfile> {
+export async function findAdminById(id: string): Promise<AdminDto> {
   const admin = await prisma.admin.findUnique({
     where: { id },
     select: {
@@ -120,8 +106,10 @@ export async function findAdminById(id: string): Promise<AdminProfile> {
       name: true,
       email: true,
       status: true,
-      createdAt: true,
-      updatedAt: true,
+      provider: true,
+      access: true,
+      profileComplete: true
+      
     },
   });
 
@@ -132,24 +120,29 @@ export async function findAdminById(id: string): Promise<AdminProfile> {
     );
   }
 
-  return toAdminProfile(admin);
+  return toAdminDto(admin);
 }
 
 export async function findAdminByEmail(
   email: string,
-): Promise<AdminProfile | null> {
+): Promise<AdminDto> {
   const admin = await prisma.admin.findUnique({
     where: { email },
     select: {
       id: true,
       name: true,
       email: true,
-      createdAt: true,
-      updatedAt: true,
+      status: true,
+      provider: true,
+      profileComplete: true,
+      access: true,
     },
   });
+  if(!admin){
+    throw new NotFoundError("Admin does not exists", "Admin service findAdminByEmail()");
+  }
 
-  return admin ? toAdminProfile(admin) : null;
+  return toAdminDto(admin);
 }
 
 export async function restoreAdminSession(

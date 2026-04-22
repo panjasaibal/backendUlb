@@ -4,30 +4,44 @@ import {
   NotAuthorizedError,
   NotFoundError,
 } from "@panjasaibal/backend_ulb_shared";
+
 import { findAdminById } from "./admin.oauth.services";
-import { SuperVisor } from "@admin/model/supervisor.model";
+import { SupervisorDto } from "@admin/dto/supervisor.dto";
+import { prisma } from "@admin/prisma";
 
-type SupervisorDoc = InstanceType<typeof SuperVisor>;
 
-async function createSupervisor(supervisor: ISupervisor): Promise<string> {
-  const adminId = supervisor.admin;
+async function createSupervisor(supervisor: SupervisorDto): Promise<string> {
+  
 
-  const existedAdmin = await findAdminById(adminId);
+  const existedAdmin = await findAdminById(supervisor.adminId);
   if (!existedAdmin)
     throw new BadRequestError(
       "Admin does not exists",
       "supervisor service createSupervisor() methd",
     );
 
-  const newSupervisor = await SuperVisor.create(supervisor);
+  const newSupervisor = await prisma.supervisor.create({
+    data:{
+      admin: {
+        connect:{
+          id: existedAdmin.id
+        }
+      },
+      name: supervisor.name,
+      phone: supervisor.phone,
+      address: supervisor.address,
+      profile: supervisor.profile,
+      aadhar: supervisor.aadhar,
+    }
+  });
 
-  return newSupervisor._id.toString();
+  return newSupervisor.id;
 }
 
 async function findSupervisorByAdminAndId(
   adminId: string,
   supervisor_id: string,
-): Promise<ISupervisor> {
+): Promise<SupervisorDto> {
   const existedAdmin = await findAdminById(adminId);
   if (!existedAdmin)
     throw new NotAuthorizedError(
@@ -35,9 +49,11 @@ async function findSupervisorByAdminAndId(
       "supervisor service findSupervisorById() methd",
     );
 
-  const supervisor = await SuperVisor.findOne({
-    _id: supervisor_id,
-    admin: adminId,
+  const supervisor = await prisma.supervisor.findUnique({
+    where:{
+      id: supervisor_id,
+      adminId: adminId
+    }
   });
   if (!supervisor)
     throw new NotFoundError(
@@ -45,7 +61,7 @@ async function findSupervisorByAdminAndId(
       "supervisor service findSupervisorById() methd",
     );
 
-  return toISupervisor(supervisor);
+  return toSupervisorDto(supervisor);
 }
 
 
@@ -99,7 +115,7 @@ async function updateSupervisor(
     { $set: { supervisor_body } },
   );
 
-  return toISupervisor(newUpdatedSupervisor as SupervisorDoc);
+  return toSupervisorDto(newUpdatedSupervisor as SupervisorDoc);
 }
 
 async function removeSupervisor(adminId: string, supervisor_id: string):Promise<boolean> {
@@ -115,17 +131,27 @@ async function removeSupervisor(adminId: string, supervisor_id: string):Promise<
     return currentSupervisor?true:false; 
 }
 
-function toISupervisor(supervisor: SupervisorDoc): ISupervisor {
+function toSupervisorDto(record:{
+    id: string;
+    name: string;
+    phone: string;
+    address: string | null;
+    profile: string | null;
+    aadhar: string;
+    createdAt: Date;
+    updatedAt: Date;
+    adminId: string;
+}): SupervisorDto {
   return {
-    _id: supervisor._id.toString(),
-    admin: supervisor.admin.toString(),
-    adhar: supervisor.adhar ?? null,
-    name: supervisor.name,
-    phone: supervisor.phone,
-    profile: supervisor.profile ?? null,
-    address: supervisor.address ?? null,
-    createdAt: supervisor.createdAt,
-    updatedAt: supervisor.updatedAt,
+    id: record.id,
+    adminId: record.adminId,
+    aadhar: record.aadhar,
+    name: record.name,
+    phone: record.phone,
+    profile: record.profile ?? null,
+    address: record.address ?? null,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
   };
 }
 
