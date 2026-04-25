@@ -1,5 +1,9 @@
 export class ApiResponse{
-    constructor(statusCode, data, message="success", success=true){
+    private statusCode;
+    private data;
+    public message;
+    public success;
+    constructor(statusCode:string, data:any, message="success", success=true){
         this.statusCode = statusCode;
         this.data = data;
         this.message = message;

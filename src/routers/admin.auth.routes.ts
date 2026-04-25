@@ -3,8 +3,12 @@ import { passport } from "@admin/passport";
 import { oauthCallback } from "@admin/controller/OAuth/admin.auth.controller";
 import { attachOAuthStates, parseOAuthState } from "@admin/middleware/admin.OAuth.middleware";
 import { AuthenticateOptions } from "passport";
-import { getAllSupervisor, getAllWorker, getSupervisor, getWorker } from "@admin/controller/admin/get";
+
 import { fetchUser } from "@admin/middleware/user.middleware";
+import { Get } from "@admin/controller/admin/get";
+import { Create } from "@admin/controller/admin/create";
+import { Delete } from "@admin/controller/admin/delete";
+import { Update } from "@admin/controller/admin/update";
 
 type AdminOAuthRequest = Request & {
   oAuthState?: string | Record<string, unknown>;
@@ -56,11 +60,22 @@ router.get(
 
 //protected routes
 
-router.get("/admin/getAllWorker",fetchUser, getAllWorker);
-router.get("/admin/getWorker", fetchUser, getWorker);
+router.post("/admin/supervisor/create", fetchUser,/* middleware for validation,*/ Create.prototype.supervisor);
+router.post("/admin/worker/create", fetchUser,/* middleware for validation,*/ Create.prototype.worker);
 
-router.get("/admin/getAllSupervisor",fetchUser, getAllSupervisor);
-router.get("/admin/getSupervisor/:id", fetchUser, getSupervisor);
+router.get("/admin/getAllWorker",fetchUser, Get.prototype.getAllWorker);
+//router.get("/admin/getWorker", fetchUser, getWorker);
+
+router.get("/admin/getAllSupervisor",fetchUser, Get.prototype.getAllSupervisor);
+router.get("/admin/getSupervisor/:id", fetchUser, Get.prototype.getSupervisor);
+router.get("/admin/tracker/:user_id", fetchUser, Get.prototype.getCurrentTracker);
+
+router.put("/admin/supervisor/:supervisor_id", fetchUser, Update.prototype.update_supervisor);
+router.put("/admin/worker/:worker_id", fetchUser, Update.prototype.update_worker);
+
+router.delete("/admin/supervisor/:id", fetchUser, Delete.prototype.supervisor);
+router.delete("/admin/worker/:id", fetchUser, Delete.prototype.worker);
+
 
 
 export const adminAuthRoutes = () => router;

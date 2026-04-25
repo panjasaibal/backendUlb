@@ -9,10 +9,7 @@ import { findAdminById } from "./admin.oauth.services";
 import { SupervisorDto } from "@admin/dto/supervisor.dto";
 import { prisma } from "@admin/prisma";
 
-
 async function createSupervisor(supervisor: SupervisorDto): Promise<string> {
-  
-
   const existedAdmin = await findAdminById(supervisor.adminId);
   if (!existedAdmin)
     throw new BadRequestError(
@@ -21,18 +18,18 @@ async function createSupervisor(supervisor: SupervisorDto): Promise<string> {
     );
 
   const newSupervisor = await prisma.supervisor.create({
-    data:{
+    data: {
       admin: {
-        connect:{
-          id: existedAdmin.id
-        }
+        connect: {
+          id: existedAdmin.id,
+        },
       },
       name: supervisor.name,
       phone: supervisor.phone,
       address: supervisor.address,
       profile: supervisor.profile,
       aadhar: supervisor.aadhar,
-    }
+    },
   });
 
   return newSupervisor.id;
@@ -50,10 +47,10 @@ async function findSupervisorByAdminAndId(
     );
 
   const supervisor = await prisma.supervisor.findUnique({
-    where:{
+    where: {
       id: supervisor_id,
-      adminId: adminId
-    }
+      adminId: adminId,
+    },
   });
   if (!supervisor)
     throw new NotFoundError(
@@ -64,83 +61,101 @@ async function findSupervisorByAdminAndId(
   return toSupervisorDto(supervisor);
 }
 
-
 async function findSupervisorById(
   supervisor_id: string,
-): Promise<ISupervisor> {
-  
-
-  const supervisor = await SuperVisor.findById(supervisor_id);
-  if (!supervisor)
+): Promise<SupervisorDto> {
+  const supervisor = await prisma.supervisor.findUnique({
+    where: { id: supervisor_id },
+  });
+  if (supervisor === null)
     throw new NotFoundError(
-      "Supervisor does npt exists",
+      "Supervisor does not exists",
       "supervisor service findSupervisorById() methd",
     );
 
-  return toISupervisor(supervisor);
+  return toSupervisorDto(supervisor);
 }
-
 
 async function findAllSupervisorByAdmin(
   admin_id: string,
-): Promise<Array<ISupervisor>> {
-  
-
-  const allSupervisors = await SuperVisor.find({admin: admin_id});
-  if (!allSupervisors || allSupervisors.length ===0)
+): Promise<Array<SupervisorDto>> {
+  const allSupervisors = await prisma.supervisor.findMany({
+    where: { adminId: admin_id },
+  });
+  if (!allSupervisors || allSupervisors.length === 0)
     throw new NotFoundError(
       "Empty Supervisor list",
       "supervisor service findAllSupervisorByAdmin() methd",
     );
-  
-  let supervisors: Array<ISupervisor> = allSupervisors.map((supervisor)=>toISupervisor(supervisor));
+
+  let supervisors: Array<SupervisorDto> = allSupervisors.map((supervisor) =>
+    toSupervisorDto(supervisor),
+  );
 
   return supervisors;
 }
 
 async function updateSupervisor(
-  admin_id: string,
   supervisor_id: string,
-  supervisor_body: Partial<ISupervisor>,
-):Promise<ISupervisor> {
-  const existedAdmin = await findAdminById(admin_id);
-  if (!existedAdmin)
-    throw new NotAuthorizedError(
-      "Admin does not exists",
-      "supervisor service updateSupervisor() methd",
+  supervisor_body: Partial<SupervisorDto>,
+): Promise<SupervisorDto> {
+  const existed_supervisors = await prisma.supervisor.findUnique({
+    where: { id: supervisor_id },
+  });
+
+  if (existed_supervisors === null) {
+    throw new NotFoundError(
+      "Supervisor does not exists",
+      "supervisor service updateSupervisor() method",
     );
+  }
+  const newUpdatedSupervisor = await prisma.supervisor.update({
+    where: { id: supervisor_id },
 
-  const newUpdatedSupervisor = await SuperVisor.findOneAndUpdate(
-    { _id: supervisor_id, admin: admin_id },
-    { $set: { supervisor_body } },
-  );
+    data: {
+      name: supervisor_body.name,
+      phone: supervisor_body.phone,
+      address: supervisor_body.address,
+      profile: supervisor_body.profile,
+      aadhar: supervisor_body.aadhar,
+    },
+  });
 
-  return toSupervisorDto(newUpdatedSupervisor as SupervisorDoc);
+  return toSupervisorDto(newUpdatedSupervisor);
 }
 
-async function removeSupervisor(adminId: string, supervisor_id: string):Promise<boolean> {
-    const existedAdmin = await findAdminById(adminId);
-    if (!existedAdmin)
-    throw new NotAuthorizedError(
-      "Admin does not exists",
-      "supervisor service removeSupervisor() methd",
+async function removeSupervisor(
+
+  supervisor_id: string,
+): Promise<boolean> {
+  const existed_supervisors = await prisma.supervisor.findUnique({
+    where: { id: supervisor_id },
+  });
+
+  if (existed_supervisors === null) {
+    throw new NotFoundError(
+      "Supervisor does not exists",
+      "supervisor service updateSupervisor() method",
     );
+  }
 
-    const currentSupervisor = await SuperVisor.findOneAndDelete({ _id: supervisor_id, admin: adminId });
+  const currentSupervisor = await prisma.supervisor.delete({
+    where:{id:supervisor_id}
+  });
 
-    return currentSupervisor?true:false; 
+  return currentSupervisor ? true : false;
 }
 
-function toSupervisorDto(record:{
-    id: string;
-    name: string;
-    phone: string;
-    address: string | null;
-    profile: string | null;
-    aadhar: string;
-    createdAt: Date;
-    updatedAt: Date;
-    adminId: string;
+function toSupervisorDto(record: {
+  id: string;
+  name: string;
+  phone: string;
+  address: string | null;
+  profile: string | null;
+  aadhar: string;
+  createdAt: Date;
+  updatedAt: Date;
+  adminId: string;
 }): SupervisorDto {
   return {
     id: record.id,
@@ -155,5 +170,11 @@ function toSupervisorDto(record:{
   };
 }
 
-
-export { createSupervisor, findSupervisorById, findSupervisorByAdminAndId, findAllSupervisorByAdmin, updateSupervisor, removeSupervisor };
+export {
+  createSupervisor,
+  findSupervisorById,
+  findSupervisorByAdminAndId,
+  findAllSupervisorByAdmin,
+  updateSupervisor,
+  removeSupervisor,
+};
