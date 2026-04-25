@@ -6,7 +6,7 @@ const PORT = 5000;
 export function startServer(app: Application): http.Server {
     const httpServer: http.Server = new http.Server(app);
     httpServer.listen(PORT, () => {
-      console.log(`Server started at port:${PORT}`);
+      console.log(`Server started at port:${PORT} with pid:${process.pid}`);
 
       httpServer.on("error", (error: NodeJS.ErrnoException) => {
         if (error.code === "EADDRINUSE") {

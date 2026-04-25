@@ -30,8 +30,8 @@ interface AdminDto {
   profileComplete?: boolean;
   status?: AdminStatus;
   subscription?: SubscriptionPlan;
-  createdAt: Date,
-  updatedAt: Date,
+  createdAt?: Date,
+  updatedAt?: Date,
 }
 
 export{

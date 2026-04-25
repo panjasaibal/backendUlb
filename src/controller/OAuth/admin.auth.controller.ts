@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
 
 import setAuthCookies from "@admin/cookie";
-import { IAdmin } from "@panjasaibal/backend_ulb_shared";
+
 import {
   createAdmin,
   findAdminByEmail,
 } from "@admin/services/admin.oauth.services";
 import { signAccessToken, signRefreshToken } from "@admin/util/jwt_manage";
+import { StatusCodes } from "http-status-codes";
 
 type AdminOAuthRequest = Request & {
   oAuthState?: string | Record<string, unknown>;
@@ -35,7 +36,7 @@ export const oauthCallback = async (req: AdminOAuthRequest, res: Response) => {
 
   if (state.flow === "signup") {
     if (!email) {
-      return res.status(400).json({
+      return res.status(StatusCodes.BAD_REQUEST).json({
         message: "Google account email is required for admin signup",
       });
     }
@@ -53,7 +54,7 @@ export const oauthCallback = async (req: AdminOAuthRequest, res: Response) => {
   if (state.flow === "signin") {
     
     if (!email) {
-      return res.status(400).json({
+      return res.status(StatusCodes.BAD_REQUEST).json({
         message: "Google account email is required for admin signin",
       });
     }
@@ -61,25 +62,25 @@ export const oauthCallback = async (req: AdminOAuthRequest, res: Response) => {
     const admin = await findAdminByEmail(email);
 
     if (!admin) {
-      return res.status(403).json({
+      return res.status(StatusCodes.NOT_FOUND).json({
         message: "Admin account not found for this Google account",
       });
     }
 
     if (String(admin.status) === "DISABLED") {
-      return res.status(403).json({
+      return res.status(StatusCodes.FORBIDDEN).json({
         message: "Admin access has been revoked",
       });
     }
 
     const accessToken = signAccessToken(
-      admin.id,
+      admin.id!,
       admin.name,
       admin.email,
       "ADMIN",
     );
     const refreshToken = signRefreshToken(
-      admin.id,
+      admin.id!,
       admin.name,
       admin.email,
       "ADMIN"
@@ -89,5 +90,5 @@ export const oauthCallback = async (req: AdminOAuthRequest, res: Response) => {
     return res.redirect(`http://localhost:3000/dashboard/${admin.id}`);
   }
 
-  return res.status(400).json({ message: "Unsupported OAuth flow" });
+  return res.status(StatusCodes.BAD_REQUEST).json({ message: "Unsupported OAuth flow" });
 };
